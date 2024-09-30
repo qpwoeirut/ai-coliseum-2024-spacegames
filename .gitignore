@@ -1,5 +1,6 @@
 # ai-coliseum-2024-spacegames
 
 /.idea
+/build
 /games
 /logs
