@@ -1,4 +1,4 @@
-package a_turtleplayer.util;
+package a1_hotspot_turtle_player.util;
 
 import aic2024.user.*;
 
@@ -35,6 +35,11 @@ public class Util {
         return null;
     }
 
-    public static int getOxygenOfStructure(UnitController uc) {
+    public static boolean isEmptyTile(UnitController uc){
+        return true;
+    }
+
+    public static int getOxygenOfStructure(UnitController uc){
+        return 5000;
     }
 }
