@@ -33,6 +33,7 @@ public class AstronautPlayer extends BasePlayer {
 
         while (true) {
             uc.drawLineDebug(uc.getLocation(), target, 10, 10, 10);
+            uc.drawLineDebug(uc.getLocation(), uc.getLocation().add(moveToward(target)), 100, 0, 0);
             //broadcasts are used to give opponent hq locations
             CarePackageInfo pkg = choosePackage(uc.senseCarePackages(VISION));
             if (pkg != null) retrievePackage(pkg);
@@ -42,8 +43,12 @@ public class AstronautPlayer extends BasePlayer {
             if (pkg == null && uc.senseTileType(uc.getLocation()) == TileType.HOT_ZONE){
                 uc.yield();
             }
+            System.out.println(moveToward(target));
+            System.out.println(uc.getLocation());
+//            System.out.println("hihi");
             if (pkg == null && uc.canPerformAction(ActionType.MOVE, moveToward(target), 0)) {
-                uc.performAction(ActionType.MOVE, toHq.opposite(), 0);
+                uc.drawLineDebug(uc.getLocation(), uc.getLocation().add(moveToward(target)), 0, 0, 100);
+                uc.performAction(ActionType.MOVE, moveToward(target), 0);
             }
             uc.yield();
         }
@@ -74,44 +79,77 @@ public class AstronautPlayer extends BasePlayer {
         int atx = uc.getLocation().x;
         int aty = uc.getLocation().y;
         Direction initdir = uc.getLocation().directionTo(loc);
-        if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)){
-            initdir = initdir.rotateRight();
+        if ((int)(Math.random()*2) == 0) {
+            if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)) {
+                for (int i = 0; i < 1; i++) {
+                    initdir = initdir.rotateRight();
+                }
+            } else {
+                return initdir;
+            }
+            if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)) {
+                for (int i = 0; i < 2; i++) {
+                    initdir = initdir.rotateLeft();
+                }
+            } else {
+                return initdir;
+            }
+            if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)) {
+                for (int i = 0; i < 3; i++) {
+                    initdir = initdir.rotateRight();
+                }
+            } else {
+                return initdir;
+            }
+            if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)) {
+                for (int i = 0; i < 4; i++) {
+                    initdir = initdir.rotateLeft();
+                }
+            } else {
+                return initdir;
+            }
+            if (uc.canPerformAction(ActionType.MOVE, initdir, 0)) {
+                return initdir;
+            }
         }
         else{
-            return initdir;
-        }
-        if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)){
-            initdir = initdir.rotateLeft();
-            initdir = initdir.rotateLeft();
-        }
-        else{
-            return initdir;
-        }
-        if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)){
-            initdir = initdir.rotateRight();
-            initdir = initdir.rotateRight();
-            initdir = initdir.rotateRight();
-        }
-        else{
-            return initdir;
-        }
-        if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)){
-            initdir = initdir.rotateLeft();
-            initdir = initdir.rotateLeft();
-            initdir = initdir.rotateLeft();
-            initdir = initdir.rotateLeft();
-        }
-        else{
-            return initdir;
-        }
-        if (uc.canPerformAction(ActionType.MOVE, initdir, 0)){
-            return initdir;
+            if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)) {
+                for (int i = 0; i < 1; i++) {
+                    initdir = initdir.rotateLeft();
+                }
+            } else {
+                return initdir;
+            }
+            if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)) {
+                for (int i = 0; i < 2; i++) {
+                    initdir = initdir.rotateRight();
+                }
+            } else {
+                return initdir;
+            }
+            if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)) {
+                for (int i = 0; i < 3; i++) {
+                    initdir = initdir.rotateLeft();
+                }
+            } else {
+                return initdir;
+            }
+            if (!uc.canPerformAction(ActionType.MOVE, initdir, 0)) {
+                for (int i = 0; i < 4; i++) {
+                    initdir = initdir.rotateRight();
+                }
+            } else {
+                return initdir;
+            }
+            if (uc.canPerformAction(ActionType.MOVE, initdir, 0)) {
+                return initdir;
+            }
         }
         return Direction.ZERO;
     }
 
     void retrievePackage(CarePackageInfo pkg) {
-        Direction dir = uc.getLocation().directionTo(pkg.getLocation());
+        Direction dir = moveToward(pkg.getLocation());
         if (uc.getLocation().distanceSquared(pkg.getLocation()) <= 2 && uc.canPerformAction(ActionType.RETRIEVE, dir, 0)) {
             uc.performAction(ActionType.RETRIEVE, dir, 0);
         } else if (uc.canPerformAction(ActionType.MOVE, dir, 0)) {
