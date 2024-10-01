@@ -42,4 +42,20 @@ public class Util {
         }
         return false;
     }
+
+    public static boolean makeRandomMove(UnitController uc) {
+        final int i = (int) (uc.getRandomDouble() * 8);
+        return tryMove(uc, Direction.values()[i]) ||
+                tryMove(uc, Direction.values()[(i + 1) % 8]) ||
+                tryMove(uc, Direction.values()[(i + 2) % 8]) ||
+                tryMove(uc, Direction.values()[(i + 3) % 8]) ||
+                tryMove(uc, Direction.values()[(i + 4) % 8]) ||
+                tryMove(uc, Direction.values()[(i + 5) % 8]) ||
+                tryMove(uc, Direction.values()[(i + 6) % 8]) ||
+                tryMove(uc, Direction.values()[(i + 7) % 8]);
+    }
+
+    public static float visionRadius(UnitController uc) {
+        return uc.isStructure() ? uc.getType().getVisionRange() : GameConstants.ASTRONAUT_VISION_RANGE;
+    }
 }
