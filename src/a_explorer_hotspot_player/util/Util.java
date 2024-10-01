@@ -1,4 +1,4 @@
-package a1_hotspot_turtle_player.util;
+package a_explorer_hotspot_player.util;
 
 import aic2024.user.*;
 
