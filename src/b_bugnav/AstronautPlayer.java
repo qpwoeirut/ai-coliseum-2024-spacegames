@@ -19,9 +19,7 @@ public class AstronautPlayer extends BasePlayer {
             }
             if (uc.pollBroadcast().getMessage() == 0) {
                 CarePackageInfo pkg = choosePackage(uc.senseCarePackages(VISION));
-                if (pkg == null && uc.canPerformAction(ActionType.MOVE, toHq.opposite(), 0)) {
-                    uc.performAction(ActionType.MOVE, toHq.opposite(), 0);
-                }
+                if (pkg == null) Util.tryMove(uc, toHq.opposite());
                 if (pkg != null) retrievePackage(pkg);
             }
             uc.yield();
@@ -52,8 +50,8 @@ public class AstronautPlayer extends BasePlayer {
         Direction dir = uc.getLocation().directionTo(pkg.getLocation());
         if (uc.getLocation().distanceSquared(pkg.getLocation()) <= 2 && uc.canPerformAction(ActionType.RETRIEVE, dir, 0)) {
             uc.performAction(ActionType.RETRIEVE, dir, 0);
-        } else if (uc.canPerformAction(ActionType.MOVE, dir, 0)) {
-            uc.performAction(ActionType.MOVE, dir, 0);
+        } else {
+            Util.tryMove(uc, dir);
         }
     }
 }
