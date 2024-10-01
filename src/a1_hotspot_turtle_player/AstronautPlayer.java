@@ -1,6 +1,6 @@
 package a1_hotspot_turtle_player;
 
-import a_turtleplayer.util.Util;
+import a1_hotspot_turtle_player.util.Util;
 import aic2024.engine.Game;
 import aic2024.user.*;
 
@@ -9,10 +9,20 @@ public class AstronautPlayer extends BasePlayer {
         super(uc);
     }
 
+
     void run() {
+
+        AstronautInfo astro = uc.getAstronautInfo();
+
+        if(astro.isBeingConstructed()){
+            uc.yield();
+        }
+
         final float VISION = GameConstants.ASTRONAUT_VISION_RANGE;
         Direction toHq = Util.toAdjacentHq(uc);
-        toHq = toHq == null ? Util.toCenter(uc.getLocation(), uc.getMapWidth(), uc.getMapHeight()) : toHq;
+        toHq = toHq == null ? Util.toCenter(uc.getLocation(), uc.getMapWidth(), uc.getMapHeight()).opposite() : toHq;
+        toHq = Util.toCenter(uc.getLocation(), uc.getMapWidth(), uc.getMapHeight()).opposite();
+        toHq = Util.randomDirection(uc, toHq, 1);
 
         while (true) {
             if (uc.pollBroadcast().getMessage() == 0) {

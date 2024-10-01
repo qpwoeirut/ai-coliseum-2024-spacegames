@@ -34,7 +34,4 @@ public class Util {
 
         return null;
     }
-
-    public static int getOxygenOfStructure(UnitController uc) {
-    }
 }

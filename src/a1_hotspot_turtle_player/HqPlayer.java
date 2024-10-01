@@ -2,7 +2,7 @@ package a1_hotspot_turtle_player;
 
 import aic2024.user.*;
 
-import a_turtleplayer.util.Util;
+import a1_hotspot_turtle_player.util.Util;
 
 public class HqPlayer extends BasePlayer {
     final int MIN_OXYGEN = (int) GameConstants.MIN_OXYGEN_ASTRONAUT + 1;
@@ -21,7 +21,10 @@ public class HqPlayer extends BasePlayer {
             if (enemies.length > 0) {
                 buildShield();
             } else if (uc.getRound() % 4 == 0) {
-                Direction d = Direction.values()[(int)(uc.getRandomDouble() * 8)];
+                Direction d = Direction.values()[(int) (uc.getRandomDouble() * 8)];
+                uc.println(GameConstants.MIN_OXYGEN_ASTRONAUT);
+                uc.println(OPTIMAL_OXYGEN);
+                uc.println(uc.canEnlistAstronaut(d, OPTIMAL_OXYGEN, null));
                 if (uc.canEnlistAstronaut(d, OPTIMAL_OXYGEN, null)) {
                     uc.enlistAstronaut(d, OPTIMAL_OXYGEN, null);
                 }
@@ -34,7 +37,7 @@ public class HqPlayer extends BasePlayer {
     void calculateOptimalOxygen(){
         int turnNumber = uc.getRound();
         int totalOxygen = Util.getOxygenOfStructure(uc);
-        OPTIMAL_OXYGEN = Math.min(totalOxygen/20,turnNumber/200+10);
+        OPTIMAL_OXYGEN = Math.min(totalOxygen/20,turnNumber/200+10)+ (int) GameConstants.MIN_OXYGEN_ASTRONAUT;
     }
     void buildShield() {
         for (Direction d : Direction.values()) {

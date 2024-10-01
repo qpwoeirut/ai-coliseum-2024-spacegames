@@ -2,6 +2,8 @@ package a1_hotspot_turtle_player.util;
 
 import aic2024.user.*;
 
+import java.util.Arrays;
+
 public class Util {
     public static Direction toCenter(Location loc, int width, int height) {
         return loc.directionTo(new Location(width / 2, height / 2));
@@ -33,6 +35,20 @@ public class Util {
         if (structure != null && structure.getType() == StructureType.HQ) return Direction.NORTHWEST;
 
         return null;
+    }
+
+    public static int randRange(UnitController uc, int low, int high){
+        //TODO: maybe change to math.random instead of uc random
+        // [low, high]
+        return low + (int) uc.getRandomDouble()*(high-low+1);
+
+    }
+
+    public static Direction randomDirection(UnitController uc, Direction mainDirection, int spread){
+        //TODO: add distribution to direction
+        Direction[] directions = Direction.values();
+        int idx = Arrays.asList(directions).indexOf(mainDirection);
+        return directions[randRange(uc, idx-spread, idx+spread)%8];
     }
 
     public static boolean isEmptyTile(UnitController uc){
