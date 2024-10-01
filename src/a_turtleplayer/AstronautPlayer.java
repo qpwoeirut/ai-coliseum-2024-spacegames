@@ -14,6 +14,9 @@ public class AstronautPlayer extends BasePlayer {
         toHq = toHq == null ? Direction.NORTH : toHq;
 
         while (true) {
+            if (uc.getAstronautInfo().isBeingConstructed()) {
+                uc.yield();
+            }
             if (uc.pollBroadcast().getMessage() == 0) {
                 CarePackageInfo pkg = choosePackage(uc.senseCarePackages(VISION));
                 if (pkg == null && uc.canPerformAction(ActionType.MOVE, toHq.opposite(), 0)) {
