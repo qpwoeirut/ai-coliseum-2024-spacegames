@@ -1,6 +1,7 @@
 package a1_hotspot_turtle_player;
 
 import a_turtleplayer.util.Util;
+import aic2024.engine.Game;
 import aic2024.user.*;
 
 public class AstronautPlayer extends BasePlayer {
@@ -11,15 +12,19 @@ public class AstronautPlayer extends BasePlayer {
     void run() {
         final float VISION = GameConstants.ASTRONAUT_VISION_RANGE;
         Direction toHq = Util.toAdjacentHq(uc);
-        toHq = toHq == null ? Direction.NORTH : toHq;
+        toHq = toHq == null ? Util.toCenter(uc.getLocation(), uc.getMapWidth(), uc.getMapHeight()) : toHq;
 
         while (true) {
             if (uc.pollBroadcast().getMessage() == 0) {
                 CarePackageInfo pkg = choosePackage(uc.senseCarePackages(VISION));
+                if (pkg == null && uc.senseTileType(uc.getLocation()) == TileType.HOT_ZONE){
+                    uc.yield();
+                }
                 if (pkg == null && uc.canPerformAction(ActionType.MOVE, toHq.opposite(), 0)) {
                     uc.performAction(ActionType.MOVE, toHq.opposite(), 0);
                 }
                 if (pkg != null) retrievePackage(pkg);
+
             }
             uc.yield();
         }
