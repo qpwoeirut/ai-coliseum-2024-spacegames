@@ -18,16 +18,15 @@ public class HqPlayer extends BasePlayer {
         final double average = sum / ((double) oppHQLoc.length);
 
         while (true) {
-            int turnNumber = uc.getRound();
             final AstronautInfo[] enemies = uc.senseAstronauts(VISION, uc.getOpponent());
 //            broadcastEnemies(enemies);
 
             final int optimalOxygen = average <= 20 ?
-                    (int) GameConstants.MIN_OXYGEN_ASTRONAUT + turnNumber / 25 :
+                    (int) GameConstants.MIN_OXYGEN_ASTRONAUT + uc.getRound() / 25 :
                     (int) GameConstants.MIN_OXYGEN_ASTRONAUT + 10;
 
             broadcastDirections(oppHQLoc);
-            if (enemies.length > 0) {
+            if (enemies.length >= 6) {
                 buildShield();
             } else if (uc.getRound() % 4 == 0) {
                 final Direction d = Direction.values()[(int) (uc.getRandomDouble() * 8)];
