@@ -82,9 +82,6 @@ public class AstronautPlayer extends BasePlayer {
         int bestIndex = -1;
         float bestScore = -1;
         for (int i = astronauts.length; i-- > 0; ) {
-            if (uc.getLocation().distanceSquared(astronauts[i].getLocation()) <= 2) {
-                continue;
-            }
             float score = astronauts[i].getOxygen();
             if (bestScore < score) {
                 bestScore = score;
