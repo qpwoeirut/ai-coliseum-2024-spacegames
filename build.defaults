@@ -1,4 +1,4 @@
-package1=a_explorer_hotspot_player
-package2=a_attack_explorer
+package1=b1_explorer_hotspot_player
+package2=b2_attack_explorer
 map=SummonersRift
 seed=1234

@@ -1,4 +1,4 @@
-package a_explorer_hotspot_player.util;
+package b2_attack_explorer.util;
 
 import aic2024.user.*;
 

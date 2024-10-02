@@ -1,6 +1,6 @@
-package a_attack_explorer;
+package b2_attack_explorer;
 
-import a_attack_explorer.util.Util;
+import b2_attack_explorer.util.Util;
 import aic2024.user.*;
 
 public class AstronautPlayer extends BasePlayer {

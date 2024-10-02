@@ -1,6 +1,6 @@
-package a_explorer_hotspot_player;
+package b2_attack_explorer;
 
-import aic2024.user.*;
+import aic2024.user.UnitController;
 
 abstract public class BasePlayer {
     protected final UnitController uc;

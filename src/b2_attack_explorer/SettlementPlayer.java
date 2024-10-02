@@ -1,4 +1,4 @@
-package a_attack_explorer;
+package b2_attack_explorer;
 
 import aic2024.user.UnitController;
 
