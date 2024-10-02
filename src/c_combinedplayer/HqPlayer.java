@@ -3,8 +3,6 @@ package c_combinedplayer;
 import aic2024.user.*;
 
 public class HqPlayer extends BasePlayer {
-    final int MIN_OXYGEN = (int) GameConstants.MIN_OXYGEN_ASTRONAUT + 1;
-
     HqPlayer(UnitController uc) {
         super(uc);
     }
@@ -56,8 +54,8 @@ public class HqPlayer extends BasePlayer {
 
     void buildShield() {
         for (Direction d : Direction.values()) {
-            if (uc.canEnlistAstronaut(d, MIN_OXYGEN, null)) {
-                uc.enlistAstronaut(d, MIN_OXYGEN, null);
+            if (uc.canEnlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null)) {
+                uc.enlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null);
             }
         }
     }
