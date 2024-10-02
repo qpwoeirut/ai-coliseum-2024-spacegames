@@ -1,8 +1,7 @@
-package a_explorer_hotspot_player;
+package a_attack_explorer;
 
+import a_attack_explorer.util.Util;
 import aic2024.user.*;
-
-import a_explorer_hotspot_player.util.Util;
 
 public class HqPlayer extends BasePlayer {
     final int MIN_OXYGEN = (int) GameConstants.MIN_OXYGEN_ASTRONAUT + 1;
@@ -16,10 +15,21 @@ public class HqPlayer extends BasePlayer {
         final float VISION = uc.getType().getVisionRange();
         calculateOptimalOxygen();
         while (true) {
-            uc.drawPointDebug(new Location(0,0), 10, 10, 10);
+            int turnNumber = uc.getRound();
             final AstronautInfo[] enemies = uc.senseAstronauts(VISION, uc.getOpponent());
 //            broadcastEnemies(enemies);
             final Location[] oppHQLoc = findOppHQ();
+            double sum = 0;
+            for (int i = 0; i < oppHQLoc.length; i++){
+                sum += Math.sqrt(oppHQLoc[i].distanceSquared(uc.getLocation()));
+            }
+            double average = sum/((double)oppHQLoc.length);
+            if (average <= 20){
+                OPTIMAL_OXYGEN = (int) GameConstants.MIN_OXYGEN_ASTRONAUT + turnNumber/25;
+            }
+            else{
+                OPTIMAL_OXYGEN = (int) GameConstants.MIN_OXYGEN_ASTRONAUT + 10;
+            }
             broadcastDirections(oppHQLoc);
             if (enemies.length > 0) {
                 buildShield();

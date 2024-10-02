@@ -1,10 +1,7 @@
 package a_explorer_hotspot_player;
 
 import a_explorer_hotspot_player.util.Util;
-import aic2024.engine.Game;
 import aic2024.user.*;
-
-import javax.swing.*;
 
 public class AstronautPlayer extends BasePlayer {
     AstronautPlayer(UnitController uc) {

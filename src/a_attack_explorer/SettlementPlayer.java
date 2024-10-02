@@ -1,4 +1,4 @@
-package a_explorer_hotspot_player;
+package a_attack_explorer;
 
 import aic2024.user.UnitController;
 

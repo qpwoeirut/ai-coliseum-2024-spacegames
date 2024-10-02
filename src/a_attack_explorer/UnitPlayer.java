@@ -1,6 +1,7 @@
-package a_explorer_hotspot_player;
+package a_attack_explorer;
 
-import aic2024.user.*;
+import aic2024.user.StructureType;
+import aic2024.user.UnitController;
 
 public class UnitPlayer {
 	public void run(UnitController uc) {
