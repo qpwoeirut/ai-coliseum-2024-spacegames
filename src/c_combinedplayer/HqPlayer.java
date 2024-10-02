@@ -26,11 +26,13 @@ public class HqPlayer extends BasePlayer {
                     (int) GameConstants.MIN_OXYGEN_ASTRONAUT + 10;
 
             broadcastDirections(oppHQLoc);
-            if (enemies.length >= 6) {
+            if (needShield(enemies)) {
                 buildShield();
             } else if (uc.getRound() % 4 == 0) {
                 final Direction d = Direction.values()[(int) (uc.getRandomDouble() * 8)];
-                if (uc.canEnlistAstronaut(d, optimalOxygen, null)) {
+                if (uc.canEnlistAstronaut(d, optimalOxygen, CarePackage.SURVIVAL_KIT)) {
+                    uc.enlistAstronaut(d, optimalOxygen,  CarePackage.SURVIVAL_KIT);
+                } else if (uc.canEnlistAstronaut(d, optimalOxygen, null)) {
                     uc.enlistAstronaut(d, optimalOxygen, null);
                 }
             }
@@ -51,9 +53,22 @@ public class HqPlayer extends BasePlayer {
         return ans;
     }
 
+    boolean needShield(AstronautInfo[] enemies) {
+        int enemyScore = enemies.length;
+        for (int i = enemies.length; i --> 0;) {
+            if (enemies[i].getLocation().distanceSquared(uc.getLocation()) <= 20) ++enemyScore;
+            if (enemies[i].getCarePackage() == CarePackage.REINFORCED_SUIT) return true;
+        }
+        return enemyScore >= 4;
+    }
+
     void buildShield() {
         for (Direction d : Direction.values()) {
-            if (uc.canEnlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null)) {
+            if (uc.canEnlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, CarePackage.REINFORCED_SUIT)) {
+                uc.enlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, CarePackage.REINFORCED_SUIT);
+            } else if (uc.canEnlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, CarePackage.SURVIVAL_KIT)) {
+                uc.enlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, CarePackage.SURVIVAL_KIT);
+            } else if (uc.canEnlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null)) {
                 uc.enlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null);
             }
         }
