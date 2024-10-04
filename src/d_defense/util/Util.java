@@ -62,8 +62,10 @@ public class Util {
     public static boolean tryMove(UnitController uc, Direction dir) {
         if (uc.canPerformAction(ActionType.MOVE, dir, 0)) {
             uc.performAction(ActionType.MOVE, dir, 0);
+//            uc.println("try " + dir + " success");
             return true;
         }
+//        uc.println("try " + dir + " fail");
         return false;
     }
 

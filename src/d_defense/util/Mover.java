@@ -30,14 +30,15 @@ public class Mover {
     final int MAX_DEPTH = 15;
 
     public void moveToward(Location location) {
+//        uc.println(location);
         // reset queue when target location changes or there's gap in between calls
         if (!location.equals(lastPathingTarget) || lastPathingTurn < uc.getRound() - 4) {
             pathingCnt = 0;
             stuckCnt = 0;
         }
+//        uc.println("start path stuck " + pathingCnt + " " + stuckCnt);
 
         if (uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN) {
-            // we increase stuck count only if it's a new turn (optim for empty carriers)
             if (uc.getLocation().equals(lastLocation)) {
                 if (uc.getRound() != lastPathingTurn) {
                     stuckCnt++;
@@ -49,12 +50,14 @@ public class Mover {
             lastPathingTarget = location;
             lastPathingTurn = uc.getRound();
             if (stuckCnt >= 3) {
+//                uc.println("random move");
                 Util.makeRandomMove(uc);
                 pathingCnt = 0;
             }
             if (pathingCnt == 0) {
                 //if free of obstacle: try go directly to target
                 Direction dir = uc.getLocation().directionTo(location);
+//                uc.println("dir " + dir);
                 boolean dirCanPass = canPass(dir);
                 boolean dirRightCanPass = canPass(dir.rotateRight());
                 boolean dirLeftCanPass = canPass(dir.rotateLeft());
@@ -63,12 +66,15 @@ public class Mover {
                     else if (dirRightCanPass && Util.tryMove(uc, dir.rotateRight())) ;
                     else if (dirLeftCanPass && Util.tryMove(uc, dir.rotateLeft())) ;
                 } else {
+//                    uc.println("disable " + disableTurnDirRound);
                     //encounters obstacle; run simulation to determine best way to go
                     if (uc.getRound() > disableTurnDirRound) {
                         currentTurnDir = getTurnDir(dir, location);
                     }
+//                    uc.println("cur " + currentTurnDir);
                     while (!canPass(dir) && pathingCnt != 8) {
                         if (uc.isOutOfMap(uc.getLocation().add(dir))) {
+//                            uc.println("out " + dir);
                             currentTurnDir ^= 1;
                             pathingCnt = 0;
                             disableTurnDirRound = uc.getRound() + 100;
@@ -79,17 +85,21 @@ public class Mover {
                         if (currentTurnDir == 0) dir = dir.rotateLeft();
                         else dir = dir.rotateRight();
                     }
+//                    uc.println("trying " + dir);
                     if (pathingCnt != 8 && Util.tryMove(uc, dir)) ;
                 }
             } else {
                 //update stack of past directions, move to next available direction
                 if (pathingCnt > 1 && canPass(prv[pathingCnt - 2])) {
+//                    uc.println("unwind " + pathingCnt + " " + prv[pathingCnt - 2]);
                     pathingCnt -= 2;
                 }
                 while (pathingCnt > 0 && canPass(prv[pathingCnt - 1])) {
 //                    uc.setIndicatorLine(uc.getLocation(), uc.getLocation().add(prv[pathingCnt - 1]), 0, 255, 0);
+//                    uc.println("dec " + pathingCnt + " " + prv[pathingCnt - 1]);
                     pathingCnt--;
                 }
+//                uc.println("new path " + pathingCnt);
                 if (pathingCnt == 0) {
                     Direction dir = uc.getLocation().directionTo(location);
                     if (!canPass(dir)) {
@@ -97,8 +107,10 @@ public class Mover {
                     }
                 }
                 int pathingCntCutOff = Math.min(PRV_LENGTH, pathingCnt + 8); // if 8 then all dirs blocked
+//                uc.println("cutoff " + pathingCntCutOff);
                 while (pathingCnt > 0 && !canPass(currentTurnDir == 0 ? prv[pathingCnt - 1].rotateLeft() : prv[pathingCnt - 1].rotateRight())) {
                     prv[pathingCnt] = currentTurnDir == 0 ? prv[pathingCnt - 1].rotateLeft() : prv[pathingCnt - 1].rotateRight();
+//                    uc.println("add " + prv[pathingCnt]);
                     if (uc.isOutOfMap(uc.getLocation().add(prv[pathingCnt]))) {
                         currentTurnDir ^= 1;
                         pathingCnt = 0;
@@ -113,6 +125,7 @@ public class Mover {
                 }
                 Direction moveDir = pathingCnt == 0 ? prv[pathingCnt] :
                         (currentTurnDir == 0 ? prv[pathingCnt - 1].rotateLeft() : prv[pathingCnt - 1].rotateRight());
+//                uc.println("moveDir " + moveDir);
                 Util.tryMove(uc, moveDir);
             }
         }
@@ -133,7 +146,7 @@ public class Mover {
 
     // this simulates turning left and right to find the best direction
     private int getTurnDir(Direction direction, Location target) {
-        //int ret = getCenterDir(direction);
+//        uc.println("getTurnDir " + direction + " " + target);
         Location now = uc.getLocation();
         int moveLeft = 0;
         int moveRight = 0;
@@ -146,6 +159,7 @@ public class Mover {
             pathingCnt_++;
             dir = dir.rotateLeft();
         }
+//        uc.println("left start " + dir);
         now = now.add(dir);
 
         int byteCodeRem = uc.getEnergyLeft();
@@ -178,6 +192,7 @@ public class Mover {
             now = now.add(prv_[pathingCnt_ - 1].rotateLeft());
         }
         Location leftend = now;
+//        uc.println("leftend " + leftend);
 
         //simulate turning right
         pathingCnt_ = 0;
@@ -189,6 +204,7 @@ public class Mover {
             dir = dir.rotateRight();
         }
         now = now.add(dir);
+//        uc.println("right start " + dir);
 
         while (pathingCnt_ > 0) {
             moveRight++;
@@ -217,6 +233,7 @@ public class Mover {
             now = now.add(prv_[pathingCnt_ - 1].rotateRight());
         }
         Location rightend = now;
+//        uc.println("rightend " + rightend);
 
         if (moveLeft == -1 || moveRight == -1) return uc.getRandomDouble() < 0.5 ? 1 : 0;
         return moveLeft + getSteps(leftend, target) <= moveRight + getSteps(rightend, target) ? 0 : 1;
