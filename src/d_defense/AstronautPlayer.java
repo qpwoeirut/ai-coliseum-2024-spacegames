@@ -77,7 +77,7 @@ public class AstronautPlayer extends BasePlayer {
 
     AstronautInfo chooseAstronaut(AstronautInfo[] astronauts) {
         int bestIndex = -1;
-        float bestScore = -1;
+        float bestScore = uc.getAstronautInfo().getOxygen() - 0.001f;
         for (int i = astronauts.length; i-- > 0; ) {
             final float dist = uc.getParent().getLocation().distanceSquared(astronauts[i].getLocation());
             final float distScore = 1000f / (dist * dist);
