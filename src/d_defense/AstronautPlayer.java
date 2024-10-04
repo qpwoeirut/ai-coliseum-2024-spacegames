@@ -3,6 +3,7 @@ package d_defense;
 import aic2024.user.*;
 import d_defense.util.MapRecorder;
 import d_defense.util.Mover;
+import d_defense.util.Util;
 
 public class AstronautPlayer extends BasePlayer {
     private final MapRecorder mapRecorder;
@@ -14,9 +15,10 @@ public class AstronautPlayer extends BasePlayer {
         mover = new Mover(uc, mapRecorder);
     }
 
-    void run() {
-        final float VISION = GameConstants.ASTRONAUT_VISION_RANGE;
+    private StructureInfo targetStructure = null;
+    private CarePackageInfo targetPackage = null;
 
+    void run() {
         mapRecorder.recordInfo(100);
         uc.yield();  // Astronauts can't read broadcasts for the first round they're alive
 
@@ -26,25 +28,52 @@ public class AstronautPlayer extends BasePlayer {
         Location target = new Location(x, y);
 
         while (true) {
-            //broadcasts are used to give opponent hq locations
-            StructureInfo targStructure = chooseStructure(uc.senseStructures(VISION, uc.getOpponent()));
-            if (targStructure != null) sabotage(targStructure.getLocation());
+            boolean actedStructure = false;
+            for (int i = 8; i-- > 0 && tryTargetStructure(); ) actedStructure = true;
 
-            AstronautInfo targAstro = chooseAstronaut(uc.senseAstronauts(VISION, uc.getOpponent()));
-            if (targAstro != null) sabotage(targAstro.getLocation());
+            boolean actedAstronaut = false;
+            for (int i = 8; !actedStructure && i-- > 0 && trySabotageAstronaut(); ) actedAstronaut = true;
 
-            CarePackageInfo pkg = choosePackage(uc.senseCarePackages(VISION));
-            if (pkg != null) retrievePackage(pkg);
+            boolean actedPackage = false;
+            for (int i = 8; !actedStructure && !actedAstronaut && i-- > 0 && tryRetrievePackage(); ) actedPackage = true;
 
+            if (!actedStructure && !actedAstronaut && !actedPackage) {
+                mover.moveToward(target);
+            }
             if (uc.getAstronautInfo().getOxygen() <= Util.oxygenCost(uc)) {
                 terraformTowardHq();
             }
 
-            mover.moveToward(target);
-
             mapRecorder.recordInfo(100);
             uc.yield();
         }
+    }
+
+    boolean tryTargetStructure() {
+        targetStructure = chooseStructure(uc.senseStructures(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent()));
+        if (targetStructure != null) {
+            sabotage(targetStructure.getLocation());
+            return true;
+        }
+        return false;
+    }
+
+    boolean trySabotageAstronaut() {
+        AstronautInfo targAstro = chooseAstronaut(uc.senseAstronauts(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent()));
+        if (targAstro != null) {
+            sabotage(targAstro.getLocation());
+            return true;
+        }
+        return false;
+    }
+
+    boolean tryRetrievePackage() {
+        targetPackage = choosePackage(uc.senseCarePackages(GameConstants.ASTRONAUT_VISION_RANGE));
+        if (targetPackage != null) {
+            retrievePackage(targetPackage);
+            return true;
+        }
+        return false;
     }
 
     CarePackageInfo choosePackage(CarePackageInfo[] packages) {
@@ -56,6 +85,10 @@ public class AstronautPlayer extends BasePlayer {
                 score += (1000 - uc.getRound()) * GameConstants.OXYGEN_PLANT;
             } else if (packages[i].getCarePackageType() == CarePackage.OXYGEN_TANK) {
                 score += GameConstants.OXYGEN_TANK_AMOUNT;
+            }
+
+            if (targetPackage != null && targetPackage.getLocation() == packages[i].getLocation()) {
+                score += 5;  // Try to avoid switching targets
             }
 
             if (bestScore < score) {
@@ -70,6 +103,7 @@ public class AstronautPlayer extends BasePlayer {
         Direction dir = uc.getLocation().directionTo(pkg.getLocation());
         if (uc.getLocation().distanceSquared(pkg.getLocation()) <= 2 && uc.canPerformAction(ActionType.RETRIEVE, dir, 0)) {
             uc.performAction(ActionType.RETRIEVE, dir, 0);
+            targetPackage = null;
         } else {
             mover.moveToward(pkg.getLocation());
         }
@@ -98,6 +132,9 @@ public class AstronautPlayer extends BasePlayer {
             float score = Math.max(0, GameConstants.ASTRONAUT_VISION_RANGE - uc.getLocation().distanceSquared(structures[i].getLocation()));
             if (structures[i].getType().equals(StructureType.HQ)) {
                 score += 100000;
+            }
+            if (targetStructure != null && targetStructure.getLocation() != structures[i].getLocation()) {
+                score += 5;  // Try to avoid switching targets
             }
             if (bestScore < score) {
                 bestScore = score;
