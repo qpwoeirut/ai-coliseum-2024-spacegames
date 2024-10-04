@@ -109,8 +109,8 @@ public class AstronautPlayer extends BasePlayer {
 
     void sabotage(Location target) {
         Direction dir = uc.getLocation().directionTo(target);
-        if (uc.getLocation().distanceSquared(target) <= 2 && uc.canPerformAction(ActionType.SABOTAGE, dir, 0)) {
-            uc.performAction(ActionType.SABOTAGE, dir, 0);
+        if (uc.getLocation().distanceSquared(target) <= 2) {
+            while (uc.canPerformAction(ActionType.SABOTAGE, dir, 0)) uc.performAction(ActionType.SABOTAGE, dir, 0);
         } else {
             mover.moveToward(target);
         }
