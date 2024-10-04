@@ -36,7 +36,7 @@ public class AstronautPlayer extends BasePlayer {
             CarePackageInfo pkg = choosePackage(uc.senseCarePackages(VISION));
             if (pkg != null) retrievePackage(pkg);
 
-            if (uc.getAstronautInfo().getOxygen() <= 1) {
+            if (uc.getAstronautInfo().getOxygen() <= Util.oxygenCost(uc)) {
                 terraformTowardHq();
             }
 

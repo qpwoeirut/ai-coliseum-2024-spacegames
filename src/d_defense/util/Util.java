@@ -84,4 +84,11 @@ public class Util {
     public static float visionRadius(UnitController uc) {
         return uc.isStructure() ? uc.getType().getVisionRange() : GameConstants.ASTRONAUT_VISION_RANGE;
     }
+
+    public static float oxygenCost(UnitController uc) {
+        float cost = 1;
+        if (uc.isTerraformed(uc.getLocation())) cost *= 0.5f;
+        if (uc.getAstronautInfo().getCarePackage() == CarePackage.SURVIVAL_KIT) cost *= 0.5f;
+        return cost;
+    }
 }
