@@ -152,14 +152,14 @@ public class AstronautPlayer extends BasePlayer {
 
     void terraformTowardHq() {
         final Direction toHq = uc.getLocation().directionTo(uc.getParent().getLocation());
-        if (uc.canPerformAction(ActionType.TERRAFORM, toHq, 0)) uc.performAction(ActionType.TERRAFORM, toHq, 0);
-        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.rotateLeft(), 0)) uc.performAction(ActionType.TERRAFORM, toHq.rotateLeft(), 0);
-        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.rotateRight(), 0)) uc.performAction(ActionType.TERRAFORM, toHq.rotateRight(), 0);
-        if (uc.canPerformAction(ActionType.TERRAFORM, Direction.ZERO, 0)) uc.performAction(ActionType.TERRAFORM, Direction.ZERO, 0);
-        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.rotateLeft().rotateLeft(), 0)) uc.performAction(ActionType.TERRAFORM, toHq.rotateLeft().rotateLeft(), 0);
+        if (uc.canPerformAction(ActionType.TERRAFORM, toHq,                             0)) uc.performAction(ActionType.TERRAFORM, toHq,                             0);
+        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.rotateLeft(),                0)) uc.performAction(ActionType.TERRAFORM, toHq.rotateLeft(),                0);
+        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.rotateRight(),               0)) uc.performAction(ActionType.TERRAFORM, toHq.rotateRight(),               0);
+        if (uc.canPerformAction(ActionType.TERRAFORM, Direction.ZERO,                   0)) uc.performAction(ActionType.TERRAFORM, Direction.ZERO,                   0);
+        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.rotateLeft().rotateLeft(),   0)) uc.performAction(ActionType.TERRAFORM, toHq.rotateLeft().rotateLeft(),   0);
         if (uc.canPerformAction(ActionType.TERRAFORM, toHq.rotateRight().rotateRight(), 0)) uc.performAction(ActionType.TERRAFORM, toHq.rotateRight().rotateRight(), 0);
-        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.opposite().rotateLeft(), 0)) uc.performAction(ActionType.TERRAFORM, toHq.opposite().rotateLeft(), 0);
-        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.opposite().rotateRight(), 0)) uc.performAction(ActionType.TERRAFORM, toHq.opposite().rotateRight(), 0);
-        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.opposite(), 0)) uc.performAction(ActionType.TERRAFORM, toHq.opposite(), 0);
+        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.opposite().rotateLeft(),     0)) uc.performAction(ActionType.TERRAFORM, toHq.opposite().rotateLeft(),     0);
+        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.opposite().rotateRight(),    0)) uc.performAction(ActionType.TERRAFORM, toHq.opposite().rotateRight(),    0);
+        if (uc.canPerformAction(ActionType.TERRAFORM, toHq.opposite(),                  0)) uc.performAction(ActionType.TERRAFORM, toHq.opposite(),                  0);
     }
 }
