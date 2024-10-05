@@ -56,7 +56,7 @@ public class HqPlayer extends BasePlayer {
     boolean needShield(AstronautInfo[] enemies) {
         int enemyScore = enemies.length;
         for (int i = enemies.length; i --> 0;) {
-            if (enemies[i].getLocation().distanceSquared(uc.getLocation()) <= 20) ++enemyScore;
+            enemyScore += 24 / enemies[i].getLocation().distanceSquared(uc.getLocation());
             if (enemies[i].getCarePackage() == CarePackage.REINFORCED_SUIT) return true;
         }
         return enemyScore >= 4;
