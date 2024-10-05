@@ -18,6 +18,10 @@ public class AstronautPlayer extends BasePlayer {
     private StructureInfo targetStructure = null;
     private CarePackageInfo targetPackage = null;
 
+    private final int NO_ACTION = 0;
+    private final int TARGETED = 1;
+    private final int ACTED = 2;
+
     void run() {
         mapRecorder.recordInfo(100);
         uc.yield();  // Astronauts can't read broadcasts for the first round they're alive
@@ -26,13 +30,28 @@ public class AstronautPlayer extends BasePlayer {
 
         while (true) {
             boolean actedStructure = false;
-            for (int i = 8; i-- > 0 && tryTargetStructure(); ) actedStructure = true;
+            for (int i = 8; i-- > 0; ) {
+                final int result = tryTargetStructure();
+                if (result == ACTED) continue;
+                actedStructure = result == TARGETED;
+                break;
+            }
 
             boolean actedAstronaut = false;
-            for (int i = 8; !actedStructure && i-- > 0 && trySabotageAstronaut(); ) actedAstronaut = true;
+            for (int i = 8; i-- > 0 && !actedStructure; ) {
+                final int result = trySabotageAstronaut();
+                if (result == ACTED) continue;
+                actedAstronaut = result == TARGETED;
+                break;
+            }
 
             boolean actedPackage = false;
-            for (int i = 8; !actedStructure && !actedAstronaut && i-- > 0 && tryRetrievePackage(); ) actedPackage = true;
+            for (int i = 8; i-- > 0 && !actedStructure && !actedAstronaut; ) {
+                final int result = tryRetrievePackage();
+                if (result == ACTED) continue;
+                actedPackage = result == TARGETED;
+                break;
+            }
 
             if (!actedStructure && !actedAstronaut && !actedPackage) {
                 mover.moveToward(target);
@@ -46,31 +65,22 @@ public class AstronautPlayer extends BasePlayer {
         }
     }
 
-    boolean tryTargetStructure() {
+    int tryTargetStructure() {
         targetStructure = chooseStructure(uc.senseStructures(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent()));
-        if (targetStructure != null) {
-            sabotage(targetStructure.getLocation());
-            return true;
-        }
-        return false;
+        if (targetStructure != null) return sabotage(targetStructure.getLocation());
+        return NO_ACTION;
     }
 
-    boolean trySabotageAstronaut() {
+    int trySabotageAstronaut() {
         AstronautInfo targAstro = chooseAstronaut(uc.senseAstronauts(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent()));
-        if (targAstro != null) {
-            sabotage(targAstro.getLocation());
-            return true;
-        }
-        return false;
+        if (targAstro != null) return sabotage(targAstro.getLocation());
+        return NO_ACTION;
     }
 
-    boolean tryRetrievePackage() {
+    int tryRetrievePackage() {
         targetPackage = choosePackage(uc.senseCarePackages(GameConstants.ASTRONAUT_VISION_RANGE));
-        if (targetPackage != null) {
-            retrievePackage(targetPackage);
-            return true;
-        }
-        return false;
+        if (targetPackage != null) return retrievePackage(targetPackage);
+        return NO_ACTION;
     }
 
     CarePackageInfo choosePackage(CarePackageInfo[] packages) {
@@ -96,14 +106,16 @@ public class AstronautPlayer extends BasePlayer {
         return bestIndex == -1 ? null : packages[bestIndex];
     }
 
-    void retrievePackage(CarePackageInfo pkg) {
+    int retrievePackage(CarePackageInfo pkg) {
         Direction dir = uc.getLocation().directionTo(pkg.getLocation());
         if (uc.getLocation().distanceSquared(pkg.getLocation()) <= 2 && uc.canPerformAction(ActionType.RETRIEVE, dir, 0)) {
             uc.performAction(ActionType.RETRIEVE, dir, 0);
             targetPackage = null;
+            return ACTED;
         } else {
             mover.moveToward(pkg.getLocation());
         }
+        return TARGETED;
     }
 
     AstronautInfo chooseAstronaut(AstronautInfo[] astronauts) {
@@ -141,13 +153,19 @@ public class AstronautPlayer extends BasePlayer {
         return bestIndex == -1 ? null : structures[bestIndex];
     }
 
-    void sabotage(Location target) {
+    int sabotage(Location target) {
+        boolean acted = false;
         Direction dir = uc.getLocation().directionTo(target);
         if (uc.getLocation().distanceSquared(target) <= 2) {
-            while (uc.canPerformAction(ActionType.SABOTAGE, dir, 0)) uc.performAction(ActionType.SABOTAGE, dir, 0);
+            while (uc.canPerformAction(ActionType.SABOTAGE, dir, 0)) {
+                uc.performAction(ActionType.SABOTAGE, dir, 0);
+                acted = true;
+            }
+            return acted ? ACTED : TARGETED;
         } else {
             mover.moveToward(target);
         }
+        return TARGETED;
     }
 
     void terraformTowardHq() {
