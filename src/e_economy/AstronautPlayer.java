@@ -22,10 +22,7 @@ public class AstronautPlayer extends BasePlayer {
         mapRecorder.recordInfo(100);
         uc.yield();  // Astronauts can't read broadcasts for the first round they're alive
 
-        int msg = uc.pollBroadcast().getMessage();
-        int x = (msg - msg % 1000) / 1000;
-        int y = msg % 1000;
-        Location target = new Location(x, y);
+        final Location target = Util.symmetricLocations(uc.getParent().getLocation(), uc.getMapWidth(), uc.getMapHeight())[(int) (uc.getRandomDouble() * 3)];
 
         while (true) {
             boolean actedStructure = false;

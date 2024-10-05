@@ -91,4 +91,12 @@ public class Util {
         if (uc.getAstronautInfo().getCarePackage() == CarePackage.SURVIVAL_KIT) cost *= 0.5f;
         return cost;
     }
+
+    public static Location[] symmetricLocations(Location loc, int width, int height) {
+        Location[] symmetries = new Location[3];
+        symmetries[0] = new Location(width - loc.x, loc.y);
+        symmetries[1] = new Location(loc.x, height - loc.y);
+        symmetries[2] = new Location(width - loc.y, height - loc.y);
+        return symmetries;
+    }
 }
