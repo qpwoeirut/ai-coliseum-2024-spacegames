@@ -1,16 +1,19 @@
 package e_economy;
 
 import aic2024.user.*;
+import e_economy.util.Communication;
 import e_economy.util.MapRecorder;
 import e_economy.util.Mover;
 import e_economy.util.Util;
 
 public class AstronautPlayer extends BasePlayer {
+    private final Communication comms;
     private final MapRecorder mapRecorder;
     private final Mover mover;
 
     AstronautPlayer(UnitController uc) {
         super(uc);
+        comms = new Communication(uc);
         mapRecorder = new MapRecorder(uc);
         mover = new Mover(uc, mapRecorder);
     }
@@ -24,9 +27,25 @@ public class AstronautPlayer extends BasePlayer {
 
     void run() {
         mapRecorder.recordInfo(100);
-        uc.yield();  // Astronauts can't read broadcasts for the first round they're alive
+        uc.yield();  // Astronauts won't receive broadcasts from before they're spawned
 
-        final Location target = Util.symmetricLocations(uc.getParent().getLocation(), uc.getMapWidth(), uc.getMapHeight())[(int) (uc.getRandomDouble() * 3)];
+        final int[] dirsMessage = comms.receiveDirectionsMessage();
+        final int[] dirChance = new int[DIRS];
+        if (dirsMessage == null) {
+            for (int i = DIRS; i-- > 0; ) dirChance[i] = 1;
+        } else {
+            for (int i = DIRS; i-- > 0; ) {
+                double score = dirsMessage[i + 1] / (double)DIR_INCREMENT;
+                dirChance[i] = (int)(1_000_000 / (score * score));
+            }
+        }
+
+//        uc.println("dirChance " + Arrays.toString(dirChance));
+
+        final int targetDirection = chooseDirection(dirChance);
+        final Location target = targetTowardDirection(targetDirection);
+
+//        uc.println("target " + targetDirection + " " + target);
 
         while (true) {
             boolean actedStructure = false;
@@ -52,12 +71,15 @@ public class AstronautPlayer extends BasePlayer {
                 actedPackage = result == TARGETED;
                 break;
             }
+//            uc.println("acted " + actedStructure + " " +  actedAstronaut + " " + actedPackage);
 
             if (!actedStructure && !actedAstronaut && !actedPackage) {
+//                uc.println("move to " + target);
                 mover.moveToward(target);
             }
             if (uc.getAstronautInfo().getOxygen() <= Util.oxygenCost(uc)) {
-                terraformTowardHq();
+                comms.broadcastMessage(comms.asphyxiatedMessage(targetDirection));
+                terraformTowardHq();  // In case astronaut has radio
             }
 
             mapRecorder.recordInfo(100);
@@ -179,5 +201,30 @@ public class AstronautPlayer extends BasePlayer {
         if (uc.canPerformAction(ActionType.TERRAFORM, toHq.opposite().rotateLeft(),     0)) uc.performAction(ActionType.TERRAFORM, toHq.opposite().rotateLeft(),     0);
         if (uc.canPerformAction(ActionType.TERRAFORM, toHq.opposite().rotateRight(),    0)) uc.performAction(ActionType.TERRAFORM, toHq.opposite().rotateRight(),    0);
         if (uc.canPerformAction(ActionType.TERRAFORM, toHq.opposite(),                  0)) uc.performAction(ActionType.TERRAFORM, toHq.opposite(),                  0);
+    }
+
+    int chooseDirection(int[] dirChance) {
+        final Direction awayFromHq = uc.getParent().getLocation().directionTo(uc.getLocation());
+
+        final int awayIndex = (awayFromHq.ordinal() * 2) + DIRS;  // Add DIRS for easier modding
+        final int total = dirChance[(awayIndex - 2) % DIRS] +
+                dirChance[(awayIndex - 1) % DIRS] +
+                dirChance[ awayIndex      % DIRS] +
+                dirChance[(awayIndex + 1) % DIRS] +
+                dirChance[(awayIndex + 2) % DIRS];
+        int selection = (int)(uc.getRandomDouble() * total);
+        if (selection < dirChance[(awayIndex - 2) % DIRS]) return (awayIndex - 2) % DIRS;
+        selection -=    dirChance[(awayIndex - 2) % DIRS];
+        if (selection < dirChance[(awayIndex - 1) % DIRS]) return (awayIndex - 1) % DIRS;
+        selection -=    dirChance[(awayIndex - 1) % DIRS];
+        if (selection < dirChance[ awayIndex      % DIRS]) return  awayIndex      % DIRS;
+        selection -=    dirChance[ awayIndex      % DIRS];
+        if (selection < dirChance[(awayIndex + 1) % DIRS]) return (awayIndex + 1) % DIRS;
+
+        return (awayIndex + 2) % DIRS;
+    }
+
+    Location targetTowardDirection(int dirIndex) {
+        return uc.getLocation().add(DIRECTIONS[dirIndex][0], DIRECTIONS[dirIndex][1]);
     }
 }

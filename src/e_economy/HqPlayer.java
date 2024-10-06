@@ -3,7 +3,12 @@ package e_economy;
 import aic2024.user.*;
 import e_economy.util.Util;
 
+import java.util.Arrays;
+
 public class HqPlayer extends BasePlayer {
+    final int MAX_SPAWN_OXYGEN = 50;
+    final double DECAY = 0.999;
+
     HqPlayer(UnitController uc) {
         super(uc);
     }
@@ -11,33 +16,87 @@ public class HqPlayer extends BasePlayer {
     void run() {
         final float VISION = uc.getType().getVisionRange();
 
-        final Location[] oppHQLoc = Util.symmetricLocations(uc.getParent().getLocation(), uc.getMapWidth(), uc.getMapHeight());
-        double sum = 0;
-        for (int i = 0; i < oppHQLoc.length; i++) {
-            sum += Math.sqrt(oppHQLoc[i].distanceSquared(uc.getLocation()));
-        }
-        final double average = sum / ((double) oppHQLoc.length);
+        final int[] dirScores = new int[DIRS];
+        for (int i = DIRS; i-- > 0; ) dirScores[i] = DIR_INCREMENT;
+
+        final int[] messagesReceived = new int[100];
 
         while (true) {
+            updateDirScores(dirScores, messagesReceived);
+            double totalScore = 0;
+            for (int i = DIRS; i --> 0; ) totalScore += dirScores[i];
+            totalScore = Math.max(1.0, totalScore / (DIRS * DIR_INCREMENT));
+
+            final double spawnChance = Math.min(2 / totalScore, uc.getRound() / 30.0);
+
             final AstronautInfo[] enemies = uc.senseAstronauts(VISION, uc.getOpponent());
-
-            final int optimalOxygen = average <= 20 ?
-                    (int) GameConstants.MIN_OXYGEN_ASTRONAUT + uc.getRound() / 25 :
-                    (int) GameConstants.MIN_OXYGEN_ASTRONAUT + 10;
-
             if (needShield(enemies)) {
                 buildShield();
-            } else if (uc.getRound() % 4 == 0) {
-                final Direction d = Direction.values()[(int) (uc.getRandomDouble() * 8)];
-                if (uc.canEnlistAstronaut(d, optimalOxygen, CarePackage.SURVIVAL_KIT)) {
-                    uc.enlistAstronaut(d, optimalOxygen,  CarePackage.SURVIVAL_KIT);
-                } else if (uc.canEnlistAstronaut(d, optimalOxygen, null)) {
-                    uc.enlistAstronaut(d, optimalOxygen, null);
+            } else if (uc.getRandomDouble() < Math.max(0.2, spawnChance)) {
+                // Don't spawn too much in first rounds. Wait for care packages to land.
+
+                final int[] scores = new int[8];
+                final int dir = chooseDirection(dirScores, scores);
+
+                final double score = scores[dir] / (4.0 * DIR_INCREMENT);
+                final int spawnOxygen = (int) Math.min(MAX_SPAWN_OXYGEN, 10 + uc.getRound() / 50.0 + score);
+
+                uc.println("score oxy " + score + " " + spawnOxygen);
+
+                final Direction d = Direction.values()[dir];
+
+                final int kitOxygen = Math.min((int) GameConstants.MIN_OXYGEN_ASTRONAUT, (spawnOxygen + 1) / 2);
+                if (uc.canEnlistAstronaut(d, kitOxygen, CarePackage.SURVIVAL_KIT)) {
+                    uc.enlistAstronaut(d, kitOxygen, CarePackage.SURVIVAL_KIT);
+                } else if (uc.canEnlistAstronaut(d, spawnOxygen, CarePackage.RADIO)) {
+                    uc.enlistAstronaut(d, spawnOxygen, CarePackage.RADIO);
+                } else if (uc.canEnlistAstronaut(d, spawnOxygen, null)) {
+                    uc.enlistAstronaut(d, spawnOxygen, null);
                 }
             }
 
             uc.yield();
         }
+    }
+
+    void updateDirScores(final int[] dirScores, final int[] messagesReceived) {
+        uc.println("start dirScores " + Arrays.toString(dirScores));
+
+        // Decay old information
+        for (int i = DIRS; i --> 0; ) {
+            dirScores[i] = Math.max(DIR_INCREMENT, (int) Math.round(dirScores[i] * DECAY));
+        }
+
+        final int n_recv = comms.receiveMessagesFromAstronauts(messagesReceived);
+//        uc.println("n_recv " + n_recv);
+        for (int i = n_recv; i-- > 0; ) {
+            if (comms.typeOf(messagesReceived[i]) == comms.ASPHYXIATED) {
+                final int dir = messagesReceived[i] % comms.MAX_PAYLOAD;
+//                uc.println("asphyxiated " + dir);
+                dirScores[dir] += DIR_INCREMENT;
+            }
+            // Ignore other messages for now
+        }
+
+        uc.println("end dirScores " + Arrays.toString(dirScores));
+
+        comms.broadcastMessage(comms.dirScoresMessage(dirScores));
+    }
+
+    int chooseDirection(int[] dirScores, int[] score) {
+        for (int i = DIRS; i --> 0; ) {
+            score[ (i - 1) / 2     ] += dirScores[i];
+            score[((i + 1) / 2) % 8] += dirScores[i];
+        }
+        final int[] chance = new int[8];
+        for (int i = 8; i --> 0; ) {
+            if (!uc.canEnlistAstronaut(Direction.values()[i], (int)GameConstants.MIN_OXYGEN_ASTRONAUT, null)) {
+                chance[i] = 0;
+            } else {
+                chance[i] = 10_000_000 / score[i];
+            }
+        }
+        return Util.weightedRandom(uc.getRandomDouble(), chance);
     }
 
     boolean needShield(AstronautInfo[] enemies) {

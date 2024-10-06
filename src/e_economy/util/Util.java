@@ -99,4 +99,15 @@ public class Util {
         symmetries[2] = new Location(width - loc.y, height - loc.y);
         return symmetries;
     }
+
+    public static int weightedRandom(double randVal, int[] weights) {
+        int total = 0;
+        for (int i = weights.length; i --> 0; ) total += weights[i];
+        int random = (int)(randVal * total);
+        for (int i = weights.length; i --> 0; ) {
+            if (random < weights[i]) return i;
+            random -= weights[i];
+        }
+        return 0;
+    }
 }
