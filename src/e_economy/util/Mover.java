@@ -24,7 +24,6 @@ public class Mover {
     private Location lastPathingTarget = null;
     private Location lastLocation = null;
     private int stuckCnt = 0;
-    private int disableTurnDirRound = 0;
 
     private final Direction[] prv_ = new Direction[PRV_LENGTH];
     final int MAX_DEPTH = 15;
@@ -66,20 +65,10 @@ public class Mover {
                     else if (dirRightCanPass && Util.tryMove(uc, dir.rotateRight())) ;
                     else if (dirLeftCanPass && Util.tryMove(uc, dir.rotateLeft())) ;
                 } else {
-//                    uc.println("disable " + disableTurnDirRound);
                     //encounters obstacle; run simulation to determine best way to go
-                    if (uc.getRound() > disableTurnDirRound) {
-                        currentTurnDir = getTurnDir(dir, location);
-                    }
+                    currentTurnDir = getTurnDir(dir, location);
 //                    uc.println("cur " + currentTurnDir);
                     while (!canPass(dir) && pathingCnt != 8) {
-                        if (uc.isOutOfMap(uc.getLocation().add(dir))) {
-//                            uc.println("out " + dir);
-                            currentTurnDir ^= 1;
-                            pathingCnt = 0;
-                            disableTurnDirRound = uc.getRound() + 100;
-                            return;
-                        }
                         prv[pathingCnt] = dir;
                         pathingCnt++;
                         if (currentTurnDir == 0) dir = dir.rotateLeft();
@@ -111,12 +100,6 @@ public class Mover {
                 while (pathingCnt > 0 && !canPass(currentTurnDir == 0 ? prv[pathingCnt - 1].rotateLeft() : prv[pathingCnt - 1].rotateRight())) {
                     prv[pathingCnt] = currentTurnDir == 0 ? prv[pathingCnt - 1].rotateLeft() : prv[pathingCnt - 1].rotateRight();
 //                    uc.println("add " + prv[pathingCnt]);
-                    if (uc.isOutOfMap(uc.getLocation().add(prv[pathingCnt]))) {
-                        currentTurnDir ^= 1;
-                        pathingCnt = 0;
-                        disableTurnDirRound = uc.getRound() + 100;
-                        return;
-                    }
                     pathingCnt++;
                     if (pathingCnt == pathingCntCutOff) {
                         pathingCnt = 0;
@@ -241,7 +224,7 @@ public class Mover {
 
     private boolean canPass(Location loc) {
         if (loc.equals(uc.getLocation())) return true;
-        if (!mapRecorder.maybePassable(loc)) return false;
+        if (uc.isOutOfMap(loc) || !mapRecorder.maybePassable(loc)) return false;
         if (!uc.canSenseLocation(loc)) return true;
         if (uc.senseTileType(loc) == TileType.WATER) return false;
         return uc.senseAstronaut(loc) == null && uc.senseStructure(loc) == null;
@@ -249,11 +232,10 @@ public class Mover {
 
     private boolean canPass(Direction dir) {
         Location loc = uc.getLocation().add(dir);
+        if (uc.isOutOfMap(loc) || !mapRecorder.maybePassable(loc)) return false;
         if (!uc.canSenseLocation(loc)) return true;
-        if (!mapRecorder.maybePassable(loc)) return false;
         if (uc.senseTileType(loc) == TileType.WATER) return false;
-        if (uc.senseAstronaut(loc) == null && uc.senseStructure(loc) == null)
-            return true;
+        if (uc.senseAstronaut(loc) == null && uc.senseStructure(loc) == null) return true;
         return uc.getRandomDouble() < 0.25;
     }
 }
