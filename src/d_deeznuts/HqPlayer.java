@@ -90,8 +90,8 @@ public class HqPlayer extends BasePlayer {
                 optimalOxygen += 3*Math.ceil((Math.ceil(Math.sqrt(oppHQLoc[ind].distanceSquared(uc.getLocation())))-optimalOxygen)/3.0);
 
                 for (Direction d: Direction.values()){
-                    if (uc.canEnlistAstronaut(d, (int) (optimalOxygen*(uc.getStructureInfo().getOxygen()/(5*optimalOxygen))), CarePackage.REINFORCED_SUIT) && (int)(uc.getRandomDouble()*5) == 1) {
-                        uc.enlistAstronaut(d, (int) (optimalOxygen*(uc.getStructureInfo().getOxygen()/(5*optimalOxygen))), CarePackage.REINFORCED_SUIT);
+                    if (uc.canEnlistAstronaut(d, (int) optimalOxygen*4, CarePackage.REINFORCED_SUIT) && (int)(uc.getRandomDouble()*5) == 1) {
+                        uc.enlistAstronaut(d, (int) optimalOxygen*4, CarePackage.REINFORCED_SUIT);
                     } else if (uc.canEnlistAstronaut(d, (int) optimalOxygen, CarePackage.SURVIVAL_KIT)) {
                         uc.enlistAstronaut(d, (int) optimalOxygen, CarePackage.SURVIVAL_KIT);
                     } else if (uc.canEnlistAstronaut(d, (int) optimalOxygen, null)) {
