@@ -45,7 +45,7 @@ public class HqPlayer extends BasePlayer {
 
                 final Direction d = Direction.values()[dir];
 
-                final int kitOxygen = Math.min((int) GameConstants.MIN_OXYGEN_ASTRONAUT, (spawnOxygen + 1) / 2);
+                final int kitOxygen = Math.max((int) GameConstants.MIN_OXYGEN_ASTRONAUT, (spawnOxygen + 1) / 2);
                 if (uc.canEnlistAstronaut(d, kitOxygen, CarePackage.SURVIVAL_KIT)) {
                     uc.enlistAstronaut(d, kitOxygen, CarePackage.SURVIVAL_KIT);
                 } else if (uc.canEnlistAstronaut(d, spawnOxygen, CarePackage.RADIO)) {
