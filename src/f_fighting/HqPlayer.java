@@ -50,6 +50,8 @@ public class HqPlayer extends BasePlayer {
                     uc.enlistAstronaut(d, kitOxygen, CarePackage.SURVIVAL_KIT);
                 } else if (uc.canEnlistAstronaut(d, spawnOxygen, CarePackage.RADIO)) {
                     uc.enlistAstronaut(d, spawnOxygen, CarePackage.RADIO);
+                } else if (uc.canEnlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, CarePackage.DOME)) {
+                    uc.enlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, CarePackage.DOME);
                 } else if (uc.canEnlistAstronaut(d, spawnOxygen, null)) {
                     uc.enlistAstronaut(d, spawnOxygen, null);
                 }

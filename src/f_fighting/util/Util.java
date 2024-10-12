@@ -51,12 +51,21 @@ public class Util {
         return directions[randRange(uc, idx-spread, idx+spread)%8];
     }
 
-    public static boolean isEmptyTile(UnitController uc){
-        return true;
+    public static boolean isOpenTile(UnitController uc, Direction dir) {
+        return isEmptyTile(uc, uc.getLocation().add(dir)) &&
+                isEmptyTile(uc, uc.getLocation().add(dir).add(Direction.NORTH)) &&
+                isEmptyTile(uc, uc.getLocation().add(dir).add(Direction.NORTHWEST)) &&
+                isEmptyTile(uc, uc.getLocation().add(dir).add(Direction.WEST)) &&
+                isEmptyTile(uc, uc.getLocation().add(dir).add(Direction.SOUTHWEST)) &&
+                isEmptyTile(uc, uc.getLocation().add(dir).add(Direction.SOUTH)) &&
+                isEmptyTile(uc, uc.getLocation().add(dir).add(Direction.SOUTHEAST)) &&
+                isEmptyTile(uc, uc.getLocation().add(dir).add(Direction.EAST)) &&
+                isEmptyTile(uc, uc.getLocation().add(dir).add(Direction.NORTHEAST));
     }
 
-    public static int getOxygenOfStructure(UnitController uc){
-        return 5000;
+    public static boolean isEmptyTile(UnitController uc, Location loc) {
+        final MapObject obj = uc.senseObjectAtLocation(loc);
+        return !uc.isOutOfMap(loc) && (obj == MapObject.TERRAFORMED || obj == MapObject.DOMED_TILE || obj == MapObject.LAND) && uc.senseStructure(loc) == null;
     }
 
     public static boolean tryMove(UnitController uc, Direction dir) {

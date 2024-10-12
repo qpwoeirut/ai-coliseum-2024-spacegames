@@ -48,6 +48,9 @@ public class AstronautPlayer extends BasePlayer {
 //        uc.println("target " + targetDirection + " " + target);
 
         while (true) {
+            if (uc.getAstronautInfo().getCarePackage() == CarePackage.DOME) {
+                tryPlaceDome();
+            }
             boolean actedStructure = false;
             for (int i = 8; i-- > 0; ) {
                 final int result = tryTargetStructure();
@@ -85,6 +88,27 @@ public class AstronautPlayer extends BasePlayer {
             mapRecorder.recordInfo(100);
             uc.yield();
         }
+    }
+
+    boolean tryPlaceDome() {
+        final Direction toHq = uc.getLocation().directionTo(uc.getParent().getLocation());
+        return tryPlaceDome(toHq) ||
+                tryPlaceDome(toHq.rotateLeft()) ||
+                tryPlaceDome(toHq.rotateRight()) ||
+                tryPlaceDome(toHq.rotateLeft().rotateLeft()) ||
+                tryPlaceDome(toHq.rotateRight().rotateRight()) ||
+                tryPlaceDome(toHq.opposite().rotateLeft()) ||
+                tryPlaceDome(toHq.opposite().rotateRight()) ||
+                tryPlaceDome(toHq.opposite());
+    }
+
+    boolean tryPlaceDome(Direction dir) {
+        if (uc.isDomed(uc.getLocation().add(dir)) && uc.getAstronautInfo().getOxygen() > 2) return false;
+        if (uc.canPerformAction(ActionType.BUILD_DOME, dir, 0) && Util.isOpenTile(uc, dir)) {
+            uc.performAction(ActionType.BUILD_DOME, dir, 0);
+            return true;
+        }
+        return false;
     }
 
     int tryTargetStructure() {
