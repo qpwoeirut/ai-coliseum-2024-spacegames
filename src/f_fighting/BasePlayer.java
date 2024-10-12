@@ -14,27 +14,27 @@ abstract public class BasePlayer {
 
     protected final int DIR_INCREMENT = 10_000;
 
-    // a = [(round(25 * math.cos(2 * math.pi * (i / 16))), round(25 * math.sin(2 * math.pi * (i / 16)))) for i in range(16)][::-1]
-    // str(a[9:] + a[:9]).replace('(', '{').replace(')', '}').replace('[', '{').replace(']', '}')
+    // a = [(round(25 * math.cos(2 * math.pi * (i / 16))), round(25 * math.sin(2 * math.pi * (i / 16)))) for i in range(16)]
+    // str(a[4:] + a[:4]).replace('(', '{').replace(')', '}').replace('[', '{').replace(']', '}')
     // Rearranged to match the given Direction enum's order
-    // NW, NNW, N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW
+    // N, NNW, NW, WNW, W, WSW, SW, SSW, S, SSE, SE, ESE, E, ENE, NE, NNE
     protected final int[][] DIRECTIONS = new int[][]{
-            {-18,  18},
-            {-10,  23},
             {  0,  25},
-            { 10,  23},
-            { 18,  18},
-            { 23,  10},
-            { 25,   0},
-            { 23, -10},
-            { 18, -18},
-            { 10, -23},
-            {  0, -25},
-            {-10, -23},
-            {-18, -18},
-            {-23, -10},
+            {-10,  23},
+            {-18,  18},
+            {-23,  10},
             {-25,   0},
-            {-23,  10}
+            {-23, -10},
+            {-18, -18},
+            {-10, -23},
+            {  0, -25},
+            { 10, -23},
+            { 18, -18},
+            { 23, -10},
+            { 25,   0},
+            { 23,  10},
+            { 18,  18},
+            { 10,  23}
     };
     protected final int DIRS = DIRECTIONS.length;
 
