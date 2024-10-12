@@ -129,7 +129,7 @@ public class Mover {
 
     // this simulates turning left and right to find the best direction
     private int getTurnDir(Direction direction, Location target) {
-//        uc.println("getTurnDir " + direction + " " + target);
+//        uc.println("getTurnDir " + direction + " " + target + " " + uc.getEnergyUsed());
         Location now = uc.getLocation();
         int moveLeft = 0;
         int moveRight = 0;
@@ -145,9 +145,7 @@ public class Mover {
 //        uc.println("left start " + dir);
         now = now.add(dir);
 
-        int byteCodeRem = uc.getEnergyLeft();
-        if (byteCodeRem < BYTECODE_CUTOFF)
-            return uc.getRandomDouble() < 0.5 ? 1 : 0;
+        if (uc.getEnergyLeft() < BYTECODE_CUTOFF) return uc.getRandomDouble() < 0.5 ? 1 : 0;
         while (pathingCnt_ > 0) {
             moveLeft++;
             if (moveLeft > MAX_DEPTH) {
@@ -175,7 +173,7 @@ public class Mover {
             now = now.add(prv_[pathingCnt_ - 1].rotateLeft());
         }
         Location leftend = now;
-//        uc.println("leftend " + leftend);
+//        uc.println("leftend " + leftend + " " + uc.getEnergyUsed());
 
         //simulate turning right
         pathingCnt_ = 0;
@@ -216,16 +214,16 @@ public class Mover {
             now = now.add(prv_[pathingCnt_ - 1].rotateRight());
         }
         Location rightend = now;
-//        uc.println("rightend " + rightend);
+//        uc.println("rightend " + rightend + " " + uc.getEnergyUsed());
 
         if (moveLeft == -1 || moveRight == -1) return uc.getRandomDouble() < 0.5 ? 1 : 0;
         return moveLeft + getSteps(leftend, target) <= moveRight + getSteps(rightend, target) ? 0 : 1;
     }
 
     private boolean canPass(Location loc) {
-        if (loc.equals(uc.getLocation())) return true;
         if (uc.isOutOfMap(loc) || !mapRecorder.maybePassable(loc)) return false;
         if (!uc.canSenseLocation(loc)) return true;
+        if (loc.equals(uc.getLocation())) return true;
         if (uc.senseTileType(loc) == TileType.WATER) return false;
         return uc.senseAstronaut(loc) == null && uc.senseStructure(loc) == null;
     }
