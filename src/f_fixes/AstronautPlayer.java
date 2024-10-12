@@ -53,7 +53,7 @@ public class AstronautPlayer extends BasePlayer {
             }
             boolean actedStructure = false;
             for (int i = 8; i-- > 0; ) {
-                final int result = tryTargetStructure();
+                final int result = trySabotageStructure();
                 if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
                 actedStructure = result == TARGETED;
                 break;
@@ -82,6 +82,10 @@ public class AstronautPlayer extends BasePlayer {
                 mover.moveToward(target);
             }
             if (uc.getAstronautInfo().getOxygen() <= Util.oxygenCost(uc)) {
+                trySabotageStructure(2);
+                trySabotageAstronaut(2);
+                tryRetrievePackage(2);
+
                 comms.broadcastMessage(comms.asphyxiatedMessage(targetDirection));
                 terraformTowardHq();  // In case astronaut has radio
             }
@@ -112,20 +116,32 @@ public class AstronautPlayer extends BasePlayer {
         return false;
     }
 
-    int tryTargetStructure() {
-        targetStructure = chooseStructure(uc.senseStructures(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent()));
+    int trySabotageStructure() {
+        return trySabotageStructure(GameConstants.ASTRONAUT_VISION_RANGE);
+    }
+
+    int trySabotageStructure(int range) {
+        targetStructure = chooseStructure(uc.senseStructures(range, uc.getOpponent()));
         if (targetStructure != null) return sabotage(targetStructure.getLocation());
         return NO_ACTION;
     }
 
     int trySabotageAstronaut() {
-        AstronautInfo targAstro = chooseAstronaut(uc.senseAstronauts(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent()));
+        return trySabotageAstronaut(GameConstants.ASTRONAUT_VISION_RANGE);
+    }
+
+    int trySabotageAstronaut(int range) {
+        AstronautInfo targAstro = chooseAstronaut(uc.senseAstronauts(range, uc.getOpponent()));
         if (targAstro != null) return sabotage(targAstro.getLocation());
         return NO_ACTION;
     }
 
     int tryRetrievePackage() {
-        targetPackage = choosePackage(uc.senseCarePackages(GameConstants.ASTRONAUT_VISION_RANGE));
+        return tryRetrievePackage(GameConstants.ASTRONAUT_VISION_RANGE);
+    }
+
+    int tryRetrievePackage(int range) {
+        targetPackage = choosePackage(uc.senseCarePackages(range));
         if (targetPackage != null) return retrievePackage(targetPackage);
         return NO_ACTION;
     }
@@ -134,11 +150,13 @@ public class AstronautPlayer extends BasePlayer {
         int bestIndex = -1;
         float bestScore = -1;
         for (int i = packages.length; i-- > 0; ) {
-            float score = 100f / (uc.getLocation().distanceSquared(packages[i].getLocation()) + 1);
+            float score = 2000f / (uc.getLocation().distanceSquared(packages[i].getLocation()) * uc.getAstronautInfo().getOxygen() + 1);
             if (packages[i].getCarePackageType() == CarePackage.PLANTS) {
                 score += (1000 - uc.getRound()) * GameConstants.OXYGEN_PLANT;
             } else if (packages[i].getCarePackageType() == CarePackage.OXYGEN_TANK) {
                 score += GameConstants.OXYGEN_TANK_AMOUNT;
+            } else if (packages[i].getCarePackageType() == CarePackage.REINFORCED_SUIT) {
+                ++score;
             }
 
             if (targetPackage != null && targetPackage.getLocation() == packages[i].getLocation()) {
