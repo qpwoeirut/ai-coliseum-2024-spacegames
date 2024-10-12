@@ -54,7 +54,7 @@ public class AstronautPlayer extends BasePlayer {
             boolean actedStructure = false;
             for (int i = 8; i-- > 0; ) {
                 final int result = tryTargetStructure();
-                if (result == ACTED) continue;
+                if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
                 actedStructure = result == TARGETED;
                 break;
             }
@@ -62,7 +62,7 @@ public class AstronautPlayer extends BasePlayer {
             boolean actedAstronaut = false;
             for (int i = 8; i-- > 0 && !actedStructure; ) {
                 final int result = trySabotageAstronaut();
-                if (result == ACTED) continue;
+                if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
                 actedAstronaut = result == TARGETED;
                 break;
             }
@@ -70,7 +70,7 @@ public class AstronautPlayer extends BasePlayer {
             boolean actedPackage = false;
             for (int i = 8; i-- > 0 && !actedStructure && !actedAstronaut; ) {
                 final int result = tryRetrievePackage();
-                if (result == ACTED) continue;
+                if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
                 actedPackage = result == TARGETED;
                 break;
             }
@@ -78,6 +78,7 @@ public class AstronautPlayer extends BasePlayer {
 
             if (!actedStructure && !actedAstronaut && !actedPackage) {
 //                uc.println("move to " + target);
+                mover.moveToward(target);
                 mover.moveToward(target);
             }
             if (uc.getAstronautInfo().getOxygen() <= Util.oxygenCost(uc)) {
