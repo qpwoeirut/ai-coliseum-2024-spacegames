@@ -95,7 +95,7 @@ public class HqPlayer extends BasePlayer {
             if (!uc.canEnlistAstronaut(Direction.values()[i], (int)GameConstants.MIN_OXYGEN_ASTRONAUT, null)) {
                 chance[i] = 0;
             } else {
-                final Location edgeOfAstroRange = uc.getLocation().add(Direction.values()[i].dx * 4, Direction.values()[i].dy * 4);
+                final Location edgeOfAstroRange = uc.getLocation().add(Direction.values()[i].dx * 5, Direction.values()[i].dy * 5);
                 if (uc.isOutOfMap(edgeOfAstroRange)) chance[i] = 0;
                 else chance[i] = 10_000_000 / Math.max(1, score[i]);
             }
