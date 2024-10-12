@@ -117,6 +117,6 @@ public class Util {
             if (random < weights[i]) return i;
             random -= weights[i];
         }
-        return 0;
+        return (int)(randVal * weights.length);
     }
 }
