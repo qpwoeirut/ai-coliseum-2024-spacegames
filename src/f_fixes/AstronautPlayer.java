@@ -1,10 +1,10 @@
-package f_fighting;
+package f_fixes;
 
 import aic2024.user.*;
-import f_fighting.util.Communication;
-import f_fighting.util.MapRecorder;
-import f_fighting.util.Mover;
-import f_fighting.util.Util;
+import f_fixes.util.Communication;
+import f_fixes.util.MapRecorder;
+import f_fixes.util.Mover;
+import f_fixes.util.Util;
 
 public class AstronautPlayer extends BasePlayer {
     private final Communication comms;

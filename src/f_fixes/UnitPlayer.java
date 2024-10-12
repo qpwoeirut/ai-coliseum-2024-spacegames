@@ -1,4 +1,4 @@
-package f_fighting;
+package f_fixes;
 
 import aic2024.user.StructureType;
 import aic2024.user.UnitController;

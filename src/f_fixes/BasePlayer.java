@@ -1,7 +1,7 @@
-package f_fighting;
+package f_fixes;
 
 import aic2024.user.UnitController;
-import f_fighting.util.Communication;
+import f_fixes.util.Communication;
 
 abstract public class BasePlayer {
     protected final UnitController uc;

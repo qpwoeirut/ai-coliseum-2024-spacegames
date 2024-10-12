@@ -1,4 +1,4 @@
-package f_fighting.util;
+package f_fixes.util;
 
 import aic2024.user.Location;
 import aic2024.user.MapObject;

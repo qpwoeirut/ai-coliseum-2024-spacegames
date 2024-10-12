@@ -1,7 +1,7 @@
-package f_fighting;
+package f_fixes;
 
 import aic2024.user.*;
-import f_fighting.util.Util;
+import f_fixes.util.Util;
 
 import java.util.Arrays;
 
