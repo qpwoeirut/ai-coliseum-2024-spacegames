@@ -1,8 +1,8 @@
-package c_combinedplayer;
+package c_deeznuts;
 
 import aic2024.user.*;
-import c_combinedplayer.util.MapRecorder;
-import c_combinedplayer.util.Mover;
+import c_deeznuts.util.MapRecorder;
+import c_deeznuts.util.Mover;
 
 public class AstronautPlayer extends BasePlayer {
     private final MapRecorder mapRecorder;
@@ -20,21 +20,42 @@ public class AstronautPlayer extends BasePlayer {
         mapRecorder.recordInfo(100);
         uc.yield();  // Astronauts can't read broadcasts for the first round they're alive
 
-        int msg = uc.pollBroadcast().getMessage();
-        int x = (msg - msg % 1000) / 1000;
-        int y = msg % 1000;
-        Location target = new Location(x, y);
+//        int msg = uc.pollBroadcast().getMessage();
+//        int x = (msg - msg % 1000) / 1000;
+//        int y = msg % 1000;
+//        Location target = new Location(x, y);
+        StructureInfo parentHQ = chooseHQ(uc.senseStructures(VISION, uc.getTeam()));
+        if (parentHQ == null){
+            uc.killSelf();
+        }
+        Location[] oppHQ = findOppHQ(parentHQ.getLocation());
+        Location target = oppHQ[(int)(uc.getAstronautInfo().getOxygen()+1)%3];
+        int ind = (int)(uc.getAstronautInfo().getOxygen()+1)%3;
+        boolean reachedtarget = false;
 
         while (true) {
+            uc.drawLineDebug(uc.getLocation(), target, 10, 0, 0);
             //broadcasts are used to give opponent hq locations
-            StructureInfo targStructure = chooseStructure(uc.senseStructures(VISION, uc.getOpponent()));
-            if (targStructure != null) sabotage(targStructure.getLocation());
+            if (uc.canSenseLocation(target)){
+                if (uc.senseStructure(target).getType().equals(StructureType.HQ)){
+                    reachedtarget = true;
+                    //uc.performAction(ActionType.BROADCAST, null, ind);
+                }
+                else{
+                    uc.performAction(ActionType.BROADCAST, null, ind + 100);
+                }
+            }
 
-            AstronautInfo targAstro = chooseAstronaut(uc.senseAstronauts(VISION, uc.getOpponent()));
-            if (targAstro != null) sabotage(targAstro.getLocation());
+            if (uc.getAstronautInfo().getOxygen() <= 10 || reachedtarget) {
+                StructureInfo targStructure = chooseStructure(uc.senseStructures(VISION, uc.getOpponent()));
+                if (targStructure != null) sabotage(targStructure.getLocation());
 
-            CarePackageInfo pkg = choosePackage(uc.senseCarePackages(VISION));
-            if (pkg != null) retrievePackage(pkg);
+                AstronautInfo targAstro = chooseAstronaut(uc.senseAstronauts(VISION, uc.getOpponent()));
+                if (targAstro != null) sabotage(targAstro.getLocation());
+
+                CarePackageInfo pkg = choosePackage(uc.senseCarePackages(VISION));
+                if (pkg != null) retrievePackage(pkg);
+            }
 
             if (uc.getAstronautInfo().getOxygen() <= 1) {
                 uc.performAction(ActionType.TERRAFORM, Direction.ZERO, 0);
@@ -104,6 +125,15 @@ public class AstronautPlayer extends BasePlayer {
         return bestIndex == -1 ? null : structures[bestIndex];
     }
 
+    StructureInfo chooseHQ(StructureInfo[] structures){
+        for (int i = structures.length; i-- > 0;) {
+            if (structures[i].getType().equals(StructureType.HQ)){
+                return structures[i];
+            }
+        }
+        return null;
+    }
+
     void sabotage(Location target) {
         Direction dir = uc.getLocation().directionTo(target);
         if (uc.getLocation().distanceSquared(target) <= 2 && uc.canPerformAction(ActionType.SABOTAGE, dir, 0)) {
@@ -111,5 +141,17 @@ public class AstronautPlayer extends BasePlayer {
         } else {
             mover.moveToward(target);
         }
+    }
+
+    Location[] findOppHQ(Location at) {
+        int height = uc.getMapHeight();
+        int width = uc.getMapWidth();
+        int x = at.x;
+        int y = at.y;
+        Location[] ans = new Location[3];
+        ans[0] = new Location(x, height - y);
+        ans[1] = new Location(width - x, y);
+        ans[2] = new Location(width - x, height - y);
+        return ans;
     }
 }
