@@ -121,11 +121,10 @@ public class Mover {
         int ydif = a.y - b.y;
         if (xdif < 0) xdif = -xdif;
         if (ydif < 0) ydif = -ydif;
-        if (xdif > ydif) return xdif;
-        else return ydif;
+        return Math.max(xdif, ydif);
     }
 
-    private final int BYTECODE_CUTOFF = 3000;
+    private final int BYTECODE_CUTOFF = 3500;
 
     // this simulates turning left and right to find the best direction
     private int getTurnDir(Direction direction, Location target) {
