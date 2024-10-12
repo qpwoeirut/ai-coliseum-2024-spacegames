@@ -189,7 +189,7 @@ public class AstronautPlayer extends BasePlayer {
             if (structures[i].getType().equals(StructureType.HQ)) {
                 score += 100000;
             }
-            if (targetStructure != null && targetStructure.getLocation() != structures[i].getLocation()) {
+            if (targetStructure != null && targetStructure.getLocation() == structures[i].getLocation()) {
                 score += 5;  // Try to avoid switching targets
             }
             if (bestScore < score) {
