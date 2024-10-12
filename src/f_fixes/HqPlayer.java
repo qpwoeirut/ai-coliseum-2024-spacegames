@@ -97,7 +97,7 @@ public class HqPlayer extends BasePlayer {
             } else {
                 final Location edgeOfAstroRange = uc.getLocation().add(Direction.values()[i].dx * 4, Direction.values()[i].dy * 4);
                 if (uc.isOutOfMap(edgeOfAstroRange)) chance[i] = 0;
-                else chance[i] = 10_000_000 / score[i];
+                else chance[i] = 10_000_000 / Math.max(1, score[i]);
             }
         }
         return Util.weightedRandom(uc.getRandomDouble(), chance);
@@ -106,7 +106,7 @@ public class HqPlayer extends BasePlayer {
     boolean needShield(AstronautInfo[] enemies) {
         int enemyScore = enemies.length;
         for (int i = enemies.length; i --> 0;) {
-            enemyScore += 24 / enemies[i].getLocation().distanceSquared(uc.getLocation());
+            enemyScore += 24 / (enemies[i].getLocation().distanceSquared(uc.getLocation()) + 1);
             if (enemies[i].getCarePackage() == CarePackage.REINFORCED_SUIT) return true;
         }
         return enemyScore >= 4;

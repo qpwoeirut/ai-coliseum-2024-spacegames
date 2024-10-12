@@ -36,7 +36,7 @@ public class AstronautPlayer extends BasePlayer {
         } else {
             for (int i = DIRS; i-- > 0; ) {
                 double score = dirsMessage[i + 1] / (double)DIR_INCREMENT;
-                dirChance[i] = (int)(1_000_000 / (score * score));
+                dirChance[i] = (int)(1_000_000 / Math.max(1, score * score));
             }
         }
 
@@ -134,7 +134,7 @@ public class AstronautPlayer extends BasePlayer {
         int bestIndex = -1;
         float bestScore = -1;
         for (int i = packages.length; i-- > 0; ) {
-            float score = 100f / uc.getLocation().distanceSquared(packages[i].getLocation());
+            float score = 100f / (uc.getLocation().distanceSquared(packages[i].getLocation()) + 1);
             if (packages[i].getCarePackageType() == CarePackage.PLANTS) {
                 score += (1000 - uc.getRound()) * GameConstants.OXYGEN_PLANT;
             } else if (packages[i].getCarePackageType() == CarePackage.OXYGEN_TANK) {
@@ -170,7 +170,7 @@ public class AstronautPlayer extends BasePlayer {
         float bestScore = uc.getAstronautInfo().getOxygen() - 0.001f;
         for (int i = astronauts.length; i-- > 0; ) {
             final float dist = uc.getParent().getLocation().distanceSquared(astronauts[i].getLocation());
-            final float distScore = 1000f / (dist * dist);
+            final float distScore = 1000f / Math.max(1, dist * dist);
             final float score = astronauts[i].getOxygen() + distScore;
 
             if (bestScore < score) {
