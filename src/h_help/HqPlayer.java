@@ -96,10 +96,19 @@ public class HqPlayer extends BasePlayer {
             if (!uc.canEnlistAstronaut(Direction.values()[i], (int)GameConstants.MIN_OXYGEN_ASTRONAUT, null)) {
                 chance[i] = 0;
             } else {
-                final Location edgeOfAstroRange = uc.getLocation().add(Direction.values()[i].dx * 5, Direction.values()[i].dy * 5);
-                if (uc.isOutOfMap(edgeOfAstroRange)) chance[i] = 0;
-                else chance[i] = 10_000_000 / Math.max(1, score[i]);
+                chance[i] = 10_000_000 / Math.max(1, score[i]);
             }
+
+            if (uc.isOutOfMap(uc.getLocation().add(Direction.values()[i].dx * 5, Direction.values()[i].dy * 5))) chance[i] = 0;
+            else if (uc.isOutOfMap(uc.getLocation().add(Direction.values()[i].dx *  6, Direction.values()[i].dy *  6))) chance[i] = chance[i]     / 2;
+            else if (uc.isOutOfMap(uc.getLocation().add(Direction.values()[i].dx *  7, Direction.values()[i].dy *  7))) chance[i] = chance[i] * 2 / 3;
+            else if (uc.isOutOfMap(uc.getLocation().add(Direction.values()[i].dx *  8, Direction.values()[i].dy *  8))) chance[i] = chance[i] * 3 / 4;
+            else if (uc.isOutOfMap(uc.getLocation().add(Direction.values()[i].dx *  9, Direction.values()[i].dy *  9))) chance[i] = chance[i] * 4 / 5;
+            else if (uc.isOutOfMap(uc.getLocation().add(Direction.values()[i].dx * 10, Direction.values()[i].dy * 10))) chance[i] = chance[i] * 5 / 6;
+            else if (uc.isOutOfMap(uc.getLocation().add(Direction.values()[i].dx * 11, Direction.values()[i].dy * 11))) chance[i] = chance[i] * 6 / 7;
+            else if (uc.isOutOfMap(uc.getLocation().add(Direction.values()[i].dx * 12, Direction.values()[i].dy * 12))) chance[i] = chance[i] * 7 / 8;
+            else if (uc.isOutOfMap(uc.getLocation().add(Direction.values()[i].dx * 13, Direction.values()[i].dy * 13))) chance[i] = chance[i] * 8 / 9;
+            else if (uc.isOutOfMap(uc.getLocation().add(Direction.values()[i].dx * 14, Direction.values()[i].dy * 14))) chance[i] = chance[i] * 9 / 10;
         }
         return Util.weightedRandom(uc.getRandomDouble(), chance);
     }
