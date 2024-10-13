@@ -29,7 +29,7 @@ public class Mover {
     final int MAX_DEPTH = 15;
 
     public void moveToward(Location location) {
-//        uc.println(location);
+//        uc.println(uc.getLocation() + " " + location);
         // reset queue when target location changes or there's gap in between calls
         if (!location.equals(lastPathingTarget) || lastPathingTurn < uc.getRound() - 4) {
             pathingCnt = 0;

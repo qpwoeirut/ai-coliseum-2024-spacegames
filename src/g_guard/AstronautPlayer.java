@@ -48,6 +48,11 @@ public class AstronautPlayer extends BasePlayer {
 //        uc.println("target " + targetDirection + " " + target);
 
         while (true) {
+            if (uc.getAstronautInfo().isBeingConstructed()) {
+                endTurn(false);
+                continue;
+            }
+
             final StructureInfo[] structures = uc.senseStructures(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent());
             final AstronautInfo[] enemies = uc.senseAstronauts(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent());
             final CarePackageInfo[] packages = uc.senseCarePackages(GameConstants.ASTRONAUT_VISION_RANGE);
@@ -61,6 +66,7 @@ public class AstronautPlayer extends BasePlayer {
             boolean actedStructure = false;
             for (int i = 8; i-- > 0; ) {
                 final int result = trySabotageStructure(structures);
+                if (result == ACTED) targetLocation = null;
                 if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
                 actedStructure = result == TARGETED;
                 break;
@@ -69,6 +75,7 @@ public class AstronautPlayer extends BasePlayer {
             boolean actedHyperjump = false;
             for (int i = 8; i-- > 0 && !actedStructure; ) {
                 final int result = trySabotageHyperjump(uc.senseObjects(MapObject.HYPERJUMP, GameConstants.ASTRONAUT_VISION_RANGE));
+                if (result == ACTED) targetLocation = null;
                 if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
                 actedHyperjump = result == TARGETED;
                 break;
@@ -77,24 +84,34 @@ public class AstronautPlayer extends BasePlayer {
             boolean actedAstronaut = false;
             for (int i = 8; i-- > 0 && !actedStructure && !actedHyperjump; ) {
                 final int result = trySabotageAstronaut(enemies);
+                if (result == ACTED) targetLocation = null;
                 if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
                 actedAstronaut = result == TARGETED;
                 break;
             }
 
             boolean actedPackage = false;
-            for (int i = 8; i-- > 0 && !actedStructure && !actedHyperjump && !actedAstronaut; ) {
-                final int result = tryRetrievePackage(packages);
-                if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
-                actedPackage = result == TARGETED;
-                break;
+            if (uc.getAstronautInfo().getCarePackage() != CarePackage.REINFORCED_SUIT || uc.getAstronautInfo().getOxygen() <= 10) {
+                for (int i = 8; i-- > 0 && !actedStructure && !actedHyperjump && !actedAstronaut; ) {
+                    final int result = tryRetrievePackage(packages);
+                    uc.println("result " + result + " " + uc.getAstronautInfo().getCurrentMovementCooldown());
+                    if (result == ACTED) targetLocation = null;
+                    if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
+                    actedPackage = result == TARGETED;
+                    break;
+                }
             }
-//            uc.println("acted " + actedStructure + " " +  actedAstronaut + " " + actedPackage);
+//            uc.println("acted " + actedStructure + " " + actedHyperjump + " " + actedAstronaut + " " + actedPackage);
 
             if (!actedStructure && !actedHyperjump && !actedAstronaut && !actedPackage) {
 //                uc.println("move to " + target);
-                mover.moveToward(target);
-                mover.moveToward(target);
+                if (targetLocation != null) {
+                    mover.moveToward(targetLocation);
+                    mover.moveToward(targetLocation);
+                } else {
+                    mover.moveToward(target);
+                    mover.moveToward(target);
+                }
             }
 
             endTurn(true);
@@ -153,14 +170,20 @@ public class AstronautPlayer extends BasePlayer {
     }
 
     int trySabotageStructure(StructureInfo[] structures) {
-        targetLocation = chooseStructure(structures);
-        if (targetLocation != null) return sabotage(targetLocation);
+        Location newTargetLocation = chooseStructure(structures);
+        if (newTargetLocation != null) {
+            targetLocation = newTargetLocation;
+            return sabotage(newTargetLocation);
+        }
         return NO_ACTION;
     }
 
     int trySabotageHyperjump(Location[] hyperjumps) {
-        targetLocation = chooseHyperjump(hyperjumps);
-        if (targetLocation != null) return sabotage(targetLocation);
+        Location newTargetLocation = chooseHyperjump(hyperjumps);
+        if (newTargetLocation != null) {
+            targetLocation = newTargetLocation;
+            return sabotage(newTargetLocation);
+        }
         return NO_ACTION;
     }
 
@@ -171,8 +194,11 @@ public class AstronautPlayer extends BasePlayer {
     }
 
     int tryRetrievePackage(CarePackageInfo[] packages) {
-        targetLocation = choosePackage(packages);
-        if (targetLocation != null) return retrievePackage(targetLocation);
+        Location newTargetLocation = choosePackage(packages);
+        if (newTargetLocation != null) {
+            targetLocation = newTargetLocation;
+            return retrievePackage(newTargetLocation);
+        }
         return NO_ACTION;
     }
 
