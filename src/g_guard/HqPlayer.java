@@ -24,8 +24,8 @@ public class HqPlayer extends BasePlayer {
         while (true) {
             updateDirScores(dirScores, messagesReceived);
             double totalScore = 0;
-            for (int i = DIRS; i --> 0; ) totalScore += dirScores[i] * dirScores[i];
-            totalScore = Math.max(1.0, totalScore / (DIRS * DIRS * DIR_INCREMENT * DIR_INCREMENT));
+            for (int i = DIRS; i --> 0; ) totalScore += dirScores[i];
+            totalScore = Math.max(1.0, totalScore / (DIRS * DIR_INCREMENT));
 
             final double spawnChance = Math.min(2 / totalScore, uc.getRound() / 30.0);
 
@@ -38,7 +38,7 @@ public class HqPlayer extends BasePlayer {
                 final int dir = chooseDirection(dirScores, scores);
 
                 final double score = scores[dir] / (4.0 * DIR_INCREMENT);
-                final int spawnOxygen = (int) Math.min(MAX_SPAWN_OXYGEN, 10 + uc.getRound() / 100.0 + 5 * score);
+                final int spawnOxygen = (int) Math.min(MAX_SPAWN_OXYGEN, 10 + uc.getRound() / 50.0 + score);
 
                 uc.println("score oxy " + score + " " + spawnOxygen);
 
