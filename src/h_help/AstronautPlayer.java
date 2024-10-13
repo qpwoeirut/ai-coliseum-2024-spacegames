@@ -42,8 +42,15 @@ public class AstronautPlayer extends BasePlayer {
 
 //        uc.println("dirChance " + Arrays.toString(dirChance));
 
-        targetDirection = chooseDirection(dirChance);
-        final Location target = targetTowardDirection(targetDirection);
+        Location target;
+        if (uc.getAstronautInfo().getCarePackage() == CarePackage.REINFORCED_SUIT) {
+            target = Util.symmetricLocations(uc.getParent().getLocation(), uc.getMapWidth(), uc.getMapHeight())[(int)(uc.getRandomDouble() * 3)];
+            targetDirection = uc.getParent().getLocation().directionTo(target).ordinal() * 2;
+        } else {
+            targetDirection = chooseDirection(dirChance);
+            target = targetTowardDirection(targetDirection);
+        }
+
 
 //        uc.println("target " + targetDirection + " " + target);
 
@@ -246,9 +253,9 @@ public class AstronautPlayer extends BasePlayer {
         int bestIndex = -1;
         float bestScore = uc.getAstronautInfo().getOxygen() - 0.001f;
         for (int i = astronauts.length; i-- > 0; ) {
-            final float dist = uc.getParent().getLocation().distanceSquared(astronauts[i].getLocation());
-            final float distScore = 1000f / Math.max(1, dist * dist);
-            final float score = astronauts[i].getOxygen() + distScore;
+            final float distScore = 50f / Math.max(1, uc.getLocation().distanceSquared(astronauts[i].getLocation()));
+            final float hqDistScore = 1000f / Math.max(1, uc.getParent().getLocation().distanceSquared(astronauts[i].getLocation()));
+            final float score = astronauts[i].getOxygen() + distScore + hqDistScore;
 
             if (bestScore < score) {
                 bestScore = score;
@@ -291,6 +298,7 @@ public class AstronautPlayer extends BasePlayer {
     }
 
     int sabotage(Location target) {
+        uc.println("sabotage " + target);
         boolean acted = false;
         Direction dir = uc.getLocation().directionTo(target);
         if (uc.getLocation().distanceSquared(target) <= 2) {
