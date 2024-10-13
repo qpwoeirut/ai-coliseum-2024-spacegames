@@ -116,16 +116,16 @@ public class HqPlayer extends BasePlayer {
      * @return whether a shield was built
      */
     boolean buildShield(AstronautInfo[] enemies) {
-        final int[] directionScore = new int[8];
+        final float[] directionScore = new float[8];
         for (int i = enemies.length; i --> 0; ) {
             final int dir = uc.getLocation().directionTo(enemies[i].getLocation()).ordinal();
             if (enemies[i].getCarePackage() == CarePackage.REINFORCED_SUIT && Util.hitsFromSuit(enemies[i].getOxygen()) > 1) {
-                directionScore[dir] += (int)(10 * enemies[i].getOxygen());
+                directionScore[dir] = Math.max(directionScore[dir], 10 * enemies[i].getOxygen());
             } else {
-                directionScore[dir] += 34 / uc.getLocation().distanceSquared(enemies[i].getLocation());
+                directionScore[dir] = Math.max(directionScore[dir], 34f / uc.getLocation().distanceSquared(enemies[i].getLocation()));
             }
         }
-        final int total = directionScore[0] + directionScore[1] + directionScore[2] + directionScore[3] +
+        final float total = directionScore[0] + directionScore[1] + directionScore[2] + directionScore[3] +
                 directionScore[4] + directionScore[5] + directionScore[6] + directionScore[7];
 
         if (total >= uc.getParent().getHealth()) {
