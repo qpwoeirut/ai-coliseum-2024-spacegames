@@ -24,22 +24,21 @@ public class HqPlayer extends BasePlayer {
         while (true) {
             updateDirScores(dirScores, messagesReceived);
             double totalScore = 0;
-            for (int i = DIRS; i --> 0; ) totalScore += dirScores[i];
-            totalScore = Math.max(1.0, totalScore / (DIRS * DIR_INCREMENT));
+            for (int i = DIRS; i --> 0; ) totalScore += dirScores[i] * dirScores[i];
+            totalScore = Math.max(1.0, totalScore / (DIRS * DIRS * DIR_INCREMENT * DIR_INCREMENT));
 
             final double spawnChance = Math.min(2 / totalScore, uc.getRound() / 30.0);
 
             final AstronautInfo[] enemies = uc.senseAstronauts(VISION, uc.getOpponent());
-            if (needShield(enemies)) {
-                buildShield();
-            } else if (uc.getRandomDouble() < Math.max(0.2, spawnChance)) {
+            if (buildShield(enemies)) ;
+            else if (uc.getRandomDouble() < Math.max(0.2, spawnChance)) {
                 // Don't spawn too much in first rounds. Wait for care packages to land.
 
                 final int[] scores = new int[8];
                 final int dir = chooseDirection(dirScores, scores);
 
                 final double score = scores[dir] / (4.0 * DIR_INCREMENT);
-                final int spawnOxygen = (int) Math.min(MAX_SPAWN_OXYGEN, 10 + uc.getRound() / 50.0 + score);
+                final int spawnOxygen = (int) Math.min(MAX_SPAWN_OXYGEN, 10 + uc.getRound() / 100.0 + 5 * score);
 
                 uc.println("score oxy " + score + " " + spawnOxygen);
 
@@ -103,24 +102,55 @@ public class HqPlayer extends BasePlayer {
         return Util.weightedRandom(uc.getRandomDouble(), chance);
     }
 
-    boolean needShield(AstronautInfo[] enemies) {
-        int enemyScore = enemies.length;
-        for (int i = enemies.length; i --> 0;) {
-            enemyScore += 24 / (enemies[i].getLocation().distanceSquared(uc.getLocation()) + 1);
-            if (enemies[i].getCarePackage() == CarePackage.REINFORCED_SUIT) return true;
-        }
-        return enemyScore >= 4;
-    }
-
-    void buildShield() {
-        for (Direction d : Direction.values()) {
-            if (uc.canEnlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, CarePackage.REINFORCED_SUIT)) {
-                uc.enlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, CarePackage.REINFORCED_SUIT);
-            } else if (uc.canEnlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, CarePackage.SURVIVAL_KIT)) {
-                uc.enlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, CarePackage.SURVIVAL_KIT);
-            } else if (uc.canEnlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null)) {
-                uc.enlistAstronaut(d, (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null);
+    /**
+     * Based on the nearby enemies, build a shield of proportional strength facing the enemies.
+     * <br>
+     * Spawn suits to match their suits, then spawn regular astronauts to match their numbers.
+     * Ignore astronauts that are too far away. Assume that we are destroying any hyperjumps within 58 distance.
+     * A distance of 34 requires two turns for enemy astronauts to contact the shield.
+     * This won't work on maps where hyperjumps are behind a wall, but we'd probably lose those anyway so whatever.
+     *
+     * @param enemies nearby enemies
+     * @return whether a shield was built
+     */
+    boolean buildShield(AstronautInfo[] enemies) {
+        final int[] directionScore = new int[8];
+        for (int i = enemies.length; i --> 0; ) {
+            final int dir = uc.getLocation().directionTo(enemies[i].getLocation()).ordinal();
+            if (enemies[i].getCarePackage() == CarePackage.REINFORCED_SUIT && Util.hitsFromSuit(enemies[i].getOxygen()) > 1) {
+                directionScore[dir] += (int)(10 * enemies[i].getOxygen());
+            } else {
+                directionScore[dir] += 34 / uc.getLocation().distanceSquared(enemies[i].getLocation());
             }
         }
+        final int total = directionScore[0] + directionScore[1] + directionScore[2] + directionScore[3] +
+                directionScore[4] + directionScore[5] + directionScore[6] + directionScore[7];
+
+        if (total >= uc.getParent().getHealth()) {
+            for (int d = 8; d --> 0; ) {
+                directionScore[d] += total * 10;
+            }
+        }
+        uc.println("buildShield " + Arrays.toString(directionScore) + " " + total);
+
+        boolean built = false;
+        for (int d = 8; d --> 0; ) {
+            final double score =
+                    Math.max(directionScore[(d + 6) % 8],
+                            Math.max(directionScore[(d + 7) % 8],
+                                    Math.max(directionScore[d],
+                                            Math.max(directionScore[(d + 1) % 8], directionScore[(d + 2) % 8]))));
+
+            uc.println("score " + score + " " +  Direction.values()[d]);
+            if (uc.canEnlistAstronaut(Direction.values()[d], (int) (score / 10), CarePackage.REINFORCED_SUIT)) {
+                uc.enlistAstronaut(Direction.values()[d], (int) (score / 10), CarePackage.REINFORCED_SUIT);
+                built = true;
+            } else if (score > 0 && uc.canEnlistAstronaut(Direction.values()[d], (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null)) {
+                uc.enlistAstronaut(Direction.values()[d], (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null);
+                built = true;
+            }
+        }
+
+        return built;
     }
 }

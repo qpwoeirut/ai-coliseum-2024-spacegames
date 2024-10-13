@@ -119,4 +119,20 @@ public class Util {
         }
         return (int)(randVal * weights.length);
     }
+
+    public static int hitsFromSuit(float oxygen) {
+        if (oxygen <= 5) return 1;
+        if (oxygen <= 15) return 2;
+        if (oxygen <= 35) return 3;
+        if (oxygen <= 75) return 4;
+        if (oxygen <= 155) return 5;
+        if (oxygen <= 315) return 6;
+        if (oxygen <= 635) return 7;
+        if (oxygen <= 1275) return 7;
+        if (oxygen <= 2555) return 8;
+        if (oxygen <= 5115) return 9;
+        if (oxygen <= 10235) return 10;
+        if (oxygen <= 20475) return 11;
+        return 12;
+    }
 }
