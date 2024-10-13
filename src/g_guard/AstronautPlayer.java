@@ -18,8 +18,8 @@ public class AstronautPlayer extends BasePlayer {
         mover = new Mover(uc, mapRecorder);
     }
 
-    private StructureInfo targetStructure = null;
-    private CarePackageInfo targetPackage = null;
+    private Location targetLocation = null;
+    private int targetDirection;
 
     private final int NO_ACTION = 0;
     private final int TARGETED = 1;
@@ -42,57 +42,93 @@ public class AstronautPlayer extends BasePlayer {
 
 //        uc.println("dirChance " + Arrays.toString(dirChance));
 
-        final int targetDirection = chooseDirection(dirChance);
+        targetDirection = chooseDirection(dirChance);
         final Location target = targetTowardDirection(targetDirection);
 
 //        uc.println("target " + targetDirection + " " + target);
 
         while (true) {
+            final StructureInfo[] structures = uc.senseStructures(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent());
+            final AstronautInfo[] enemies = uc.senseAstronauts(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent());
+            final CarePackageInfo[] packages = uc.senseCarePackages(GameConstants.ASTRONAUT_VISION_RANGE);
+            if (mustHoldShield(enemies)) {
+                endTurn(false);
+                continue;
+            }
             if (uc.getAstronautInfo().getCarePackage() == CarePackage.DOME) {
                 tryPlaceDome();
             }
             boolean actedStructure = false;
             for (int i = 8; i-- > 0; ) {
-                final int result = trySabotageStructure();
+                final int result = trySabotageStructure(structures);
                 if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
                 actedStructure = result == TARGETED;
                 break;
             }
 
-            boolean actedAstronaut = false;
+            boolean actedHyperjump = false;
             for (int i = 8; i-- > 0 && !actedStructure; ) {
-                final int result = trySabotageAstronaut();
+                final int result = trySabotageHyperjump(uc.senseObjects(MapObject.HYPERJUMP, GameConstants.ASTRONAUT_VISION_RANGE));
+                if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
+                actedHyperjump = result == TARGETED;
+                break;
+            }
+
+            boolean actedAstronaut = false;
+            for (int i = 8; i-- > 0 && !actedStructure && !actedHyperjump; ) {
+                final int result = trySabotageAstronaut(enemies);
                 if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
                 actedAstronaut = result == TARGETED;
                 break;
             }
 
             boolean actedPackage = false;
-            for (int i = 8; i-- > 0 && !actedStructure && !actedAstronaut; ) {
-                final int result = tryRetrievePackage();
+            for (int i = 8; i-- > 0 && !actedStructure && !actedHyperjump && !actedAstronaut; ) {
+                final int result = tryRetrievePackage(packages);
                 if (result == ACTED || (result == TARGETED && uc.getAstronautInfo().getCurrentMovementCooldown() < GameConstants.MOVEMENT_COOLDOWN)) continue;
                 actedPackage = result == TARGETED;
                 break;
             }
 //            uc.println("acted " + actedStructure + " " +  actedAstronaut + " " + actedPackage);
 
-            if (!actedStructure && !actedAstronaut && !actedPackage) {
+            if (!actedStructure && !actedHyperjump && !actedAstronaut && !actedPackage) {
 //                uc.println("move to " + target);
                 mover.moveToward(target);
                 mover.moveToward(target);
             }
-            if (uc.getAstronautInfo().getOxygen() <= Util.oxygenCost(uc)) {
-                trySabotageStructure(2);
-                trySabotageAstronaut(2);
-                tryRetrievePackage(2);
 
-                comms.broadcastMessage(comms.asphyxiatedMessage(targetDirection));
-                terraformTowardHq();  // In case astronaut has radio
-            }
-
-            mapRecorder.recordInfo(100);
-            uc.yield();
+            endTurn(true);
         }
+    }
+
+    void endTurn(boolean sendAsphyxiated) {
+        if (uc.getAstronautInfo().getOxygen() <= Util.oxygenCost(uc)) {
+            trySabotageStructure(uc.senseStructures(2, uc.getOpponent()));
+            trySabotageAstronaut(uc.senseAstronauts(2, uc.getOpponent()));
+            tryRetrievePackage(uc.senseCarePackages(2));
+
+            if (sendAsphyxiated) comms.broadcastMessage(comms.asphyxiatedMessage(targetDirection));
+            terraformTowardHq();  // In case astronaut has radio
+        }
+
+        mapRecorder.recordInfo(100);
+        uc.yield();
+    }
+
+    boolean mustHoldShield(AstronautInfo[] enemies) {
+        if (uc.getLocation().distanceSquared(uc.getParent().getLocation()) > 2 || enemies.length == 0) return false;
+        if (uc.canSenseLocation(uc.getLocation().add(-3,  0)) && uc.senseObjectAtLocation(uc.getLocation().add(-3,  0)) == MapObject.HYPERJUMP) return true;
+        if (uc.canSenseLocation(uc.getLocation().add(-2,  0)) && uc.senseObjectAtLocation(uc.getLocation().add(-2,  0)) == MapObject.HYPERJUMP) return true;
+        if (uc.canSenseLocation(uc.getLocation().add( 0, -3)) && uc.senseObjectAtLocation(uc.getLocation().add( 0, -3)) == MapObject.HYPERJUMP) return true;
+        if (uc.canSenseLocation(uc.getLocation().add( 0, -2)) && uc.senseObjectAtLocation(uc.getLocation().add( 0, -2)) == MapObject.HYPERJUMP) return true;
+        if (uc.canSenseLocation(uc.getLocation().add( 0,  2)) && uc.senseObjectAtLocation(uc.getLocation().add( 0,  2)) == MapObject.HYPERJUMP) return true;
+        if (uc.canSenseLocation(uc.getLocation().add( 0,  3)) && uc.senseObjectAtLocation(uc.getLocation().add( 0,  3)) == MapObject.HYPERJUMP) return true;
+        if (uc.canSenseLocation(uc.getLocation().add( 2,  0)) && uc.senseObjectAtLocation(uc.getLocation().add( 2,  0)) == MapObject.HYPERJUMP) return true;
+        if (uc.canSenseLocation(uc.getLocation().add( 3,  0)) && uc.senseObjectAtLocation(uc.getLocation().add( 3,  0)) == MapObject.HYPERJUMP) return true;
+        for (int i = enemies.length; i --> 0; ) {
+            if (uc.getLocation().distanceSquared(enemies[i].getLocation()) <= 8) return true;
+        }
+        return false;
     }
 
     boolean tryPlaceDome() {
@@ -116,37 +152,31 @@ public class AstronautPlayer extends BasePlayer {
         return false;
     }
 
-    int trySabotageStructure() {
-        return trySabotageStructure(GameConstants.ASTRONAUT_VISION_RANGE);
-    }
-
-    int trySabotageStructure(int range) {
-        targetStructure = chooseStructure(uc.senseStructures(range, uc.getOpponent()));
-        if (targetStructure != null) return sabotage(targetStructure.getLocation());
+    int trySabotageStructure(StructureInfo[] structures) {
+        targetLocation = chooseStructure(structures);
+        if (targetLocation != null) return sabotage(targetLocation);
         return NO_ACTION;
     }
 
-    int trySabotageAstronaut() {
-        return trySabotageAstronaut(GameConstants.ASTRONAUT_VISION_RANGE);
+    int trySabotageHyperjump(Location[] hyperjumps) {
+        targetLocation = chooseHyperjump(hyperjumps);
+        if (targetLocation != null) return sabotage(targetLocation);
+        return NO_ACTION;
     }
 
-    int trySabotageAstronaut(int range) {
-        AstronautInfo targAstro = chooseAstronaut(uc.senseAstronauts(range, uc.getOpponent()));
+    int trySabotageAstronaut(AstronautInfo[] astronauts) {
+        AstronautInfo targAstro = chooseAstronaut(astronauts);
         if (targAstro != null) return sabotage(targAstro.getLocation());
         return NO_ACTION;
     }
 
-    int tryRetrievePackage() {
-        return tryRetrievePackage(GameConstants.ASTRONAUT_VISION_RANGE);
-    }
-
-    int tryRetrievePackage(int range) {
-        targetPackage = choosePackage(uc.senseCarePackages(range));
-        if (targetPackage != null) return retrievePackage(targetPackage);
+    int tryRetrievePackage(CarePackageInfo[] packages) {
+        targetLocation = choosePackage(packages);
+        if (targetLocation != null) return retrievePackage(targetLocation);
         return NO_ACTION;
     }
 
-    CarePackageInfo choosePackage(CarePackageInfo[] packages) {
+    Location choosePackage(CarePackageInfo[] packages) {
         int bestIndex = -1;
         float bestScore = -1;
         for (int i = packages.length; i-- > 0; ) {
@@ -159,7 +189,7 @@ public class AstronautPlayer extends BasePlayer {
                 ++score;
             }
 
-            if (targetPackage != null && targetPackage.getLocation() == packages[i].getLocation()) {
+            if (targetLocation != null && targetLocation == packages[i].getLocation()) {
                 score += 5;  // Try to avoid switching targets
             }
 
@@ -168,17 +198,17 @@ public class AstronautPlayer extends BasePlayer {
                 bestIndex = i;
             }
         }
-        return bestIndex == -1 ? null : packages[bestIndex];
+        return bestIndex == -1 ? null : packages[bestIndex].getLocation();
     }
 
-    int retrievePackage(CarePackageInfo pkg) {
-        Direction dir = uc.getLocation().directionTo(pkg.getLocation());
-        if (uc.getLocation().distanceSquared(pkg.getLocation()) <= 2 && uc.canPerformAction(ActionType.RETRIEVE, dir, 0)) {
+    int retrievePackage(Location pkg) {
+        Direction dir = uc.getLocation().directionTo(pkg);
+        if (uc.getLocation().distanceSquared(pkg) <= 2 && uc.canPerformAction(ActionType.RETRIEVE, dir, 0)) {
             uc.performAction(ActionType.RETRIEVE, dir, 0);
-            targetPackage = null;
+            targetLocation = null;
             return ACTED;
         } else {
-            mover.moveToward(pkg.getLocation());
+            mover.moveToward(pkg);
         }
         return TARGETED;
     }
@@ -199,7 +229,7 @@ public class AstronautPlayer extends BasePlayer {
         return bestIndex == -1 ? null : astronauts[bestIndex];
     }
 
-    StructureInfo chooseStructure(StructureInfo[] structures) {
+    Location chooseStructure(StructureInfo[] structures) {
         int bestIndex = -1;
         float bestScore = -1;
         for (int i = structures.length; i-- > 0; ) {
@@ -207,7 +237,7 @@ public class AstronautPlayer extends BasePlayer {
             if (structures[i].getType().equals(StructureType.HQ)) {
                 score += 100000;
             }
-            if (targetStructure != null && targetStructure.getLocation() == structures[i].getLocation()) {
+            if (targetLocation != null && targetLocation == structures[i].getLocation()) {
                 score += 5;  // Try to avoid switching targets
             }
             if (bestScore < score) {
@@ -215,7 +245,20 @@ public class AstronautPlayer extends BasePlayer {
                 bestIndex = i;
             }
         }
-        return bestIndex == -1 ? null : structures[bestIndex];
+        return bestIndex == -1 ? null : structures[bestIndex].getLocation();
+    }
+
+    Location chooseHyperjump(Location[] hyperjumps) {
+        int bestIndex = -1;
+        float bestScore = 10000f;
+        for (int i = hyperjumps.length; i-- > 0; ) {
+            float score = uc.getParent().getLocation().distanceSquared(hyperjumps[i]);
+            if (bestScore < score) {
+                bestScore = score;
+                bestIndex = i;
+            }
+        }
+        return bestIndex == -1 ? null : hyperjumps[bestIndex];
     }
 
     int sabotage(Location target) {
