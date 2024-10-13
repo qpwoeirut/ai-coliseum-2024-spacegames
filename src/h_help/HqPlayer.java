@@ -156,7 +156,7 @@ public class HqPlayer extends BasePlayer {
             if (uc.canEnlistAstronaut(Direction.values()[d], (int) (score / 10), CarePackage.REINFORCED_SUIT)) {
                 uc.enlistAstronaut(Direction.values()[d], (int) (score / 10), CarePackage.REINFORCED_SUIT);
                 built = true;
-            } else if (score > 0 && uc.canEnlistAstronaut(Direction.values()[d], (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null)) {
+            } else if (score >= 1 && uc.canEnlistAstronaut(Direction.values()[d], (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null)) {
                 uc.enlistAstronaut(Direction.values()[d], (int) GameConstants.MIN_OXYGEN_ASTRONAUT, null);
                 built = true;
             }
