@@ -61,7 +61,10 @@ public class AstronautPlayer extends BasePlayer {
                 continue;
             }
             if (uc.getAstronautInfo().getCarePackage() == CarePackage.DOME) {
-                tryPlaceDome();
+                tryPlaceObject(ActionType.BUILD_DOME);
+            } else if (uc.getAstronautInfo().getCarePackage() == CarePackage.SETTLEMENT) {
+                // Use settlements to soak up some attacks
+                tryPlaceObject(ActionType.BUILD_SETTLEMENT);
             }
             boolean actedStructure = false;
             for (int i = 8; i-- > 0; ) {
@@ -148,22 +151,22 @@ public class AstronautPlayer extends BasePlayer {
         return false;
     }
 
-    boolean tryPlaceDome() {
+    boolean tryPlaceObject(ActionType action) {
         final Direction toHq = uc.getLocation().directionTo(uc.getParent().getLocation());
-        return tryPlaceDome(toHq) ||
-                tryPlaceDome(toHq.rotateLeft()) ||
-                tryPlaceDome(toHq.rotateRight()) ||
-                tryPlaceDome(toHq.rotateLeft().rotateLeft()) ||
-                tryPlaceDome(toHq.rotateRight().rotateRight()) ||
-                tryPlaceDome(toHq.opposite().rotateLeft()) ||
-                tryPlaceDome(toHq.opposite().rotateRight()) ||
-                tryPlaceDome(toHq.opposite());
+        return tryPlaceObject(action, toHq) ||
+                tryPlaceObject(action, toHq.rotateLeft()) ||
+                tryPlaceObject(action, toHq.rotateRight()) ||
+                tryPlaceObject(action, toHq.rotateLeft().rotateLeft()) ||
+                tryPlaceObject(action, toHq.rotateRight().rotateRight()) ||
+                tryPlaceObject(action, toHq.opposite().rotateLeft()) ||
+                tryPlaceObject(action, toHq.opposite().rotateRight()) ||
+                tryPlaceObject(action, toHq.opposite());
     }
 
-    boolean tryPlaceDome(Direction dir) {
+    boolean tryPlaceObject(ActionType action, Direction dir) {
         if (uc.isDomed(uc.getLocation().add(dir)) && uc.getAstronautInfo().getOxygen() > 2) return false;
-        if (uc.canPerformAction(ActionType.BUILD_DOME, dir, 0) && Util.isOpenTile(uc, dir)) {
-            uc.performAction(ActionType.BUILD_DOME, dir, 0);
+        if (uc.canPerformAction(action, dir, 0) && Util.isOpenTile(uc, dir)) {
+            uc.performAction(action, dir, 0);
             return true;
         }
         return false;
