@@ -60,6 +60,15 @@ public class AstronautPlayer extends BasePlayer {
                 continue;
             }
 
+            if (uc.canSenseLocation(targetLocation)){
+                if (uc.senseStructure(targetLocation).getType() != StructureType.HQ) {
+                    Location prevtarget = target;
+                    while (target == prevtarget) {
+                        target = Util.symmetricLocations(uc.getParent().getLocation(), uc.getMapWidth(), uc.getMapHeight())[(int) (uc.getRandomDouble() * 3)];
+                    }
+                }
+            }
+
             final StructureInfo[] structures = uc.senseStructures(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent());
             final AstronautInfo[] enemies = uc.senseAstronauts(GameConstants.ASTRONAUT_VISION_RANGE, uc.getOpponent());
             final CarePackageInfo[] packages = uc.senseCarePackages(GameConstants.ASTRONAUT_VISION_RANGE);
